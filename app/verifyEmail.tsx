@@ -102,7 +102,7 @@ const ForgetPasswordCode = () => {
                 error={touched.code && errors.code ? errors.code : undefined}
               />
 
-              {/* Timer / Resend Code */}
+              {/* Timer / Resend Code
               {timer > 0 ? (
                 <Text style={timerstyle.timerText}>
                   Code will be resent in{" "}
@@ -114,7 +114,7 @@ const ForgetPasswordCode = () => {
                     Resend Code
                   </Text>
                 </TouchableOpacity>
-              )}
+              )} */}
             </View>
 
             {/* Proceed Button */}

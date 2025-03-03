@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import {
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     StyleSheet,
     Alert,
@@ -10,22 +9,53 @@ import {
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { styles } from "@/styles/Loginstyle";
 import FloatingLabelInput from "@/componenetsUi/login/floatingLabelInput";
-import { Link, useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
+import { forgotPassword } from "@/utils/mutations/authMutations";
+import { useMutation } from "@tanstack/react-query";
+import { showTopToast } from "@/utils/helpers";
+import { NavigationProp } from "@react-navigation/native";
+import { ApiError } from "@/utils/customApiCall";
 
 const ForgetPassword = () => {
+    const { goBack, navigate, reset } = useNavigation<NavigationProp<any>>();
     const router = useRouter();
     const validationSchema = Yup.object().shape({
         email: Yup.string()
             .email("Enter a valid email")
             .required("Email is required")
     });
-    const handleCompleteSubmit = (value :string)=>{
-        console.log("Login Data:", value);
-        Alert.alert(value)
-        router.push('/forgetPasswordCode')
-    }
+
+    const { mutate: handleVerify, isPending: registerPending } = useMutation({
+        mutationFn: forgotPassword,
+        mutationKey: ["forgetpassword"],
+        onSuccess: async (data) => {
+            const result = data?.data;
+            console.log("result Data : ", result.otp);
+            reset({
+                index: 0,
+                routes: [{
+                    name: "forgetPasswordCode",
+                    params: {
+                        email: result.email,
+                        otp: result.otp
+                    },
+                }],
+            });
+        },
+        onError: (error: ApiError) => {
+            showTopToast({
+                type: "error",
+                text1: "Error",
+                text2: error.message,
+            });
+        },
+    });
+
+    const handleCompleteSubmit = (email: string) => {
+        console.log("Login Data:", email);
+        handleVerify({ email });
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -34,15 +64,15 @@ const ForgetPassword = () => {
             <Text style={styles.subtitle}>Input e-mail address</Text>
 
             <Formik
-                initialValues={{ email: ""}}
+                initialValues={{ email: "" }}
                 validationSchema={validationSchema}
                 onSubmit={(values, { resetForm }) => {
-                    handleCompleteSubmit(values.email)
+                    handleCompleteSubmit(values.email);
                     resetForm();
                 }}
             >
                 {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-                    <View style={{flex:1,justifyContent:'space-between',paddingBottom:20}}>
+                    <View style={{ flex: 1, justifyContent: 'space-between', paddingBottom: 20 }}>
                         {/* Email Input */}
                         <FloatingLabelInput
                             label="Input Email"
@@ -54,7 +84,7 @@ const ForgetPassword = () => {
                         />
 
                         {/* Login Button */}
-                        <TouchableOpacity style={styles.loginButton} onPress={()=>handleSubmit()}>
+                        <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
                             <Text style={styles.loginButtonText}>Proceed</Text>
                         </TouchableOpacity>
                     </View>
@@ -63,4 +93,35 @@ const ForgetPassword = () => {
         </SafeAreaView>
     );
 };
+
 export default ForgetPassword;
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'black',
+        padding: 20,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: 'white',
+        marginBottom: 10,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: 20,
+    },
+    loginButton: {
+        backgroundColor: '#FFFF00',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    loginButtonText: {
+        color: 'black',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+});

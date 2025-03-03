@@ -44,7 +44,6 @@ const Profile = () => {
         { title: "Average Odds", subtitle: "Last 30 days", value: UserProfile?.average_odds },
         { title: "Total Predictions", subtitle: "Last 30 days", value: UserProfile?.total_predictions },
     ];
-    // ```javascript
     const [filteredTips, setFilteredTips] = useState(UserProfile?.tips);
 
     const filterTips = (tips: any[], status: string, range: string) => {
@@ -65,7 +64,6 @@ const Profile = () => {
             setFilteredTips(UserProfile?.tips);
         }
     };
-    // ```
 
     // const filteredTips = filterTips(UserProfile?.tips || [], selectedPortion, selectedRange);
 

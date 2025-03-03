@@ -10,12 +10,20 @@ import * as Yup from "yup";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "@/styles/Loginstyle";
 import FloatingLabelInput from "@/componenetsUi/login/floatingLabelInput";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
+import { NavigationProp, useRoute } from "@react-navigation/native";
+import { useMutation } from "@tanstack/react-query";
+import { FetchResetPassword } from "@/utils/mutations/authMutations";
+import { showTopToast } from "@/utils/helpers";
+import { ApiError } from "@/utils/customApiCall";
 
 const ResetPassword = () => {
     const router = useRouter();
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+    const route = useRoute();
+    const { goBack, navigate, reset } = useNavigation<NavigationProp<any>>();
+    const { email, otp } = route.params as { email: string; otp: string; };
 
     // ✅ Validation Schema
     const validationSchema = Yup.object().shape({
@@ -26,11 +34,29 @@ const ResetPassword = () => {
             .oneOf([Yup.ref("password")], "Passwords must match")
             .required("Confirm Password is required"),
     });
-    const handleCompleteSubmit = () => {
-        Alert.alert("Success", "Your password has been reset!");
-        router.push('/')
-    }
 
+    const { mutate: handleVerify, isPending: registerPending } = useMutation({
+        mutationFn: (data: { email: string; password: string }) => FetchResetPassword(data.email, data.password),
+        mutationKey: ["resetpassword"],
+        onSuccess: async (data) => {
+            const result = data?.data;
+            console.log("result Data : ", result);
+            Alert.alert("Success", "Your password has been reset!");
+            router.push('/');
+        },
+        onError: (error: ApiError) => {
+            showTopToast({
+                type: "error",
+                text1: "Error",
+                text2: error.message,
+            });
+        },
+    });
+
+    const handleCompleteSubmit = (values: { password: string }) => {
+        console.log("Submitted Password:", values.password);
+        handleVerify({ email, password: values.password });
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -42,7 +68,7 @@ const ResetPassword = () => {
                 initialValues={{ password: "", confirmPassword: "" }}
                 validationSchema={validationSchema}
                 onSubmit={(values, { resetForm }) => {
-                    handleCompleteSubmit()
+                    handleCompleteSubmit(values);
                     resetForm();
                 }}
             >
@@ -71,8 +97,14 @@ const ResetPassword = () => {
                         </View>
 
                         {/* Save Button */}
-                        <TouchableOpacity style={styles.loginButton} onPress={() => handleSubmit()}>
-                            <Text style={styles.loginButtonText}>Save</Text>
+                        <TouchableOpacity
+                            style={[styles.loginButton, registerPending && { backgroundColor: '#ccc' }]}
+                            onPress={handleSubmit}
+                            disabled={registerPending}
+                        >
+                            <Text style={styles.loginButtonText}>
+                                {registerPending ? "Processing..." : "Save"}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 )}

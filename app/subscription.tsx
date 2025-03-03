@@ -11,8 +11,8 @@ import { fetchPackage } from '@/utils/queries/subscription';
 
 const Subscription: React.FC = () => {
     const faqs = [
-        { title: 'When will I be billed', content: 'You will be billed at the start of your subscription period.' },
-        { title: 'Do I get promotions', content: 'You can get special promotions that are offered on some particular days or months.' }
+        { question: 'When will I be billed', answer: 'You will be billed at the start of your subscription period.' },
+        { question: 'Do I get promotions', answer: 'You can get special promotions that are offered on some particular days or months.' }
     ];
     const { token } = useAuth();
     const { data: packagesData, isLoading: loadingStatus, error: geterror } = useSuspenseQuery({
@@ -31,7 +31,7 @@ const Subscription: React.FC = () => {
             <PackageSelector selectedPackage={selectedPackage} setSelectedPackage={setSelectedPackage} packages={fetchPackages || []} />
             <SubscriptionSummary selectedPackage={selectedPackage} activePackage={activePackage} packages={fetchPackages || []} />
             <View style={{ margin: 20 }}>
-                {/* <FAQs Faqs={faqs} heading={true} /> */}
+                <FAQs Faqs={faqs} heading={true} />
             </View>
         </SafeAreaView>
     );
