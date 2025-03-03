@@ -11,10 +11,10 @@ export const API_ENDPOINTS = {
     Logout: API_DOMAIN + '/auth/logout',
     VerifyEmailOtp: API_DOMAIN + 'auth/otp-verification',
     ResendOtp: API_DOMAIN + '/auth/resend-otp',
-    ForgotPassword: API_DOMAIN + '/auth/forgot-password',
-    VerifyPasswordOtp: API_DOMAIN + '/auth/verify-forgot-password-otp',
-    ResetPassword: API_DOMAIN + '/auth/reset-password',
-    EditProfile: API_DOMAIN + '/auth/edit-profile',
+    ForgotPassword: API_DOMAIN + 'auth/forget-password',
+    VerifyPasswordOtp: API_DOMAIN + 'auth/verify-forget-password-otp/',
+    ResetPassword: API_DOMAIN + 'auth/reset-password',
+    EditProfile: API_DOMAIN + 'user/update-profile/',
     KyCRequest: API_DOMAIN + '/auth/kyc-request',
     ChangePassword: API_DOMAIN + '/auth/change-password',
     Notifications: API_DOMAIN + '/auth/get-all-notifications',
@@ -45,6 +45,11 @@ export const API_ENDPOINTS = {
   profile : {
     getProfile: API_DOMAIN + "user/view-profile/",
   },
+  Notification:{
+    getNotification: API_DOMAIN + 'notifications/'
+  },
+
+
   PUBLIC: {
     GetCountries: API_DOMAIN + '/public/countries',
     ReadAllMessages: API_DOMAIN + '/customer/read-all-messages',

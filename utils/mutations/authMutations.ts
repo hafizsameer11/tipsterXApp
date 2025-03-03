@@ -25,6 +25,18 @@ export const verifyPasswordOtp = async (email: string, otp: string) => {
     undefined
   );
 };
+export const FetchResetPassword = async (email: string, password: string) => {
+  const data = {
+    email: email,
+    password: password,
+  };
+  return await apiCall(
+    API_ENDPOINTS.AUTH.ResetPassword,
+    'POST',
+    data,
+    undefined
+  );
+};
 
 export const forgotPassword = async (data: {
   email: string;
@@ -69,6 +81,12 @@ export const markAllRead = async (
     token
   );
 };
+
+export const editProfile = async (data: FormData,user_id:number ,token: string) => {
+  return await apiCall(API_ENDPOINTS.AUTH.EditProfile + user_id, 'POST', data, token);
+}
+
+
 interface Notification {
   id: number;
   title: string;
@@ -115,10 +133,17 @@ export interface LoginResponse {
   };
 }
 
-interface IForgotPasswordOtp extends ApiResponse {
+interface IForgotPasswordOtp {
+  status: string;
   data: {
     email: string;
+    otp: number;
+    userId: number;
+    updatedAt: string;
+    createdAt: string;
+    id: number;
   };
+  message: string;
 }
 interface IRegisterReq {
   firstName: string;
