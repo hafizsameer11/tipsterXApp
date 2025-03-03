@@ -34,6 +34,8 @@ interface ProfileView {
         total_predictions: number;
         tips: Tip[];
         isFollowing: boolean;
+        subscriber: number;
+        follower_count: number;
         graphicalData: GraphicalData[];
     };
     message: string;

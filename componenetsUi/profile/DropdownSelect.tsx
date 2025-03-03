@@ -20,7 +20,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({ title, options, onSelec
           onSelect(value);
         }}
         items={options}
-        placeholder={{ label: title, value: null }}
+        placeholder={{ label: title, value: "30" }}
         style={{
           inputAndroid: styles.input,
           inputIOS: styles.input,

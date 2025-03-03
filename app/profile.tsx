@@ -18,7 +18,7 @@ import { API_Images_Domain } from '@/utils/apiConfig';
 const Profile = () => {
     const router = useRouter();
     const [selectedPortion, setSelectedPortion] = useState("performance");
-    const [selectedRange, setSelectedRange] = useState<string>("30");
+    const [selectedRange, setSelectedRange] = useState<any>("30");
     const route = useRoute();
     const { token } = useAuth();
     const { context, userId } = route.params as { context: string; userId: number; };
@@ -92,36 +92,45 @@ const Profile = () => {
             console.warn("Invalid tips data, expected an array");
             return;
         }
-
-        const now = new Date();
-
+    
+        const now = new Date(); // Current date
+        
         const filteredTips = tips.filter((tip) => {
-            const matchDateStr = tip.match_date; // Get match_date
-            const matchDate = matchDateStr ? new Date(matchDateStr.split("-").reverse().join("-")) : null; // Convert DD-MM-YYYY to Date
-
-            const withinRange = matchDate
-                ? (Math.ceil((now.getTime() - matchDate.getTime()) / (1000 * 3600 * 24)) <= parseInt(range))
-                : true; // If no match_date, include it
-
-            return tip.result === status;
+            const createdAtStr = tip.created_at; // Get created_at
+            const createdAt = createdAtStr ? new Date(createdAtStr) : null; // Convert string to Date
+            
+            // Check if the tip is within the selected range
+            const withinRange = createdAt 
+                ? (Math.ceil((now.getTime() - createdAt.getTime()) / (1000 * 3600 * 24)) <= parseInt(range))
+                : true; // If no created_at, include the tip
+    
+            return tip.result === status && withinRange;
         });
-
+    
         console.log("Filtered Tips:", filteredTips);
         setFilteredTips(filteredTips);
     };
-
-    // const [isFollowing, setIsFollowing] = useState(UserProfile?.isFollowing);
-
+    
+    // ✅ Handle Portion Selection (Won, Running, Lost)
     const handleSelection = (value: string) => {
         setSelectedPortion(value);
         console.log("Selected value:", value);
-        if (value == "running" || value == "won" || value === "lost") {
-            console.log("filter tips called with", UserProfile?.tips, value, selectedRange);
+        if (value === "running" || value === "won" || value === "lost") {
             filterTips(UserProfile?.tips, value, selectedRange);
         } else {
             setFilteredTips(UserProfile?.tips);
         }
     };
+    
+    // ✅ Handle Day Selection (Dropdown)
+    const handleDaySelection = (value: string) => {
+        setSelectedRange(value);
+        console.log("Selected range:", value);
+        if (selectedPortion === "running" || selectedPortion === "won" || selectedPortion === "lost") {
+            filterTips(UserProfile?.tips, selectedPortion, value);
+        }
+    };
+    
 
     // const filteredTips = filterTips(UserProfile?.tips || [], selectedPortion, selectedRange);
 
@@ -151,12 +160,12 @@ const Profile = () => {
                         </View>
                         <View style={styles.statsCan}>
                             <View style={styles.stat}>
-                                <Text style={styles.statText}>20</Text>
+                                <Text style={styles.statText}>{UserProfile?.subscriber || 0}</Text>
                                 <Text style={styles.statText}>Subscribers</Text>
                             </View>
                             <View style={{ width: 5, height: 5, backgroundColor: "white", borderRadius: 5 }} />
                             <View style={styles.stat}>
-                                <Text style={styles.statText}>200</Text>
+                                <Text style={styles.statText}>{UserProfile?.follower_count || 0}</Text>
                                 <Text style={styles.statText}>Followers</Text>
                             </View>
                         </View>
