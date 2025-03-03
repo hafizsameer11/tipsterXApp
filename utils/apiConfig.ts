@@ -1,5 +1,5 @@
 export const API_BASE_URL = 'https://tipster.hmstech.org';
-
+export const API_BASE_URL_IMG = 'https://tipster.hmstech.org/storage/';
 export const API_DOMAIN = API_BASE_URL + '/api/';
 export const API_Images_Domain = "http://tipster.hmstech.org/storage/"
 

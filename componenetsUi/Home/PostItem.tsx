@@ -7,7 +7,8 @@ import {
     TouchableOpacity,
     Modal,
     FlatList,
-    Dimensions
+    Dimensions,
+    Share
 } from "react-native";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -17,6 +18,8 @@ import { API_BASE_URL, API_Images_Domain } from "@/utils/apiConfig";
 import { LikePost } from "@/utils/queries/PostQueries";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/authContext";
+import { useNavigation } from "expo-router";
+import { NavigationProp } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -32,6 +35,8 @@ interface PostItemProps {
         recent_comments: any[];
         timestamp: string;
         images: string[];
+        view_count: number;
+        share_count: number;
         user: {
             id: number;
             username: string;
@@ -50,6 +55,8 @@ interface postType {
     likes_count: number;
     recent_comments: any[];
     timestamp: string;
+    view_count: number;
+    share_count: number;
     user: {
         id: number;
         username: string;
@@ -61,7 +68,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState(0);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const { token } = useAuth();
+    const { token, userData } = useAuth();
     const [ImagesData, setImagesData] = useState<string[]>([]);
     // State for BottomSheet visibility
 
@@ -77,15 +84,19 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
     console.log(ImagesData);
 
     const handlePress = () => {
-        // Pass the comments associated with this post.  If you don't have them
-        // already, you'll need to fetch them here.  I'm using a placeholder
-        // for now.
-        const commentsForThisPost = [
-            { id: "1", username: 'Shawn', time: "1h", no_of_like: 10, isliked: true, comment: 'Nice !!' },
-            // ... more comments for this post
-        ];
+        // Map recent comments to the correct structure expected by onCommentPress
+        const commentsForThisPost = post.recent_comments.map(comment => ({
+            id: comment.id.toString(),
+            username: comment.user.username,
+            profileImage: API_Images_Domain + comment.user.profile_picture,
+            content: comment.content,
+            time: "Just now", // Adjust time formatting if needed
+            likes: 0, // Default likes (You may need to update this if your API provides like count)
+        }));
+
         onCommentPress(commentsForThisPost); // Pass the comments to the callback
     };
+
 
     const openImageSlider = (index: number) => {
         setSelectedImage(index);
@@ -97,35 +108,98 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
         const newIndex = Math.round(event.nativeEvent.contentOffset.x / width);
         setCurrentIndex(newIndex);
     };
+    const [likesCount, setLikesCount] = useState(post.likes_count);
+
+    const [isLiked, setIsLiked] = useState(false); // Initialize based on user interaction
+
     const { mutate: handleLike, isPending: likeLoading } = useMutation({
         mutationKey: ["like"],
-        mutationFn: () => LikePost(post.id, token),
-        onSuccess: (data: any) => {
-            console.log("Post liked successfully:", data);
+        mutationFn: async () => {
+            const response = await LikePost(post.id, token);
+            return response.data; // Ensure response contains `data`
+        },
+        onSuccess: (response) => {
+            console.log("Post like/unlike response:", response);
+
+            if (response) {
+                setLikesCount(response.likes_count);
+
+                setIsLiked(response.is_liked);
+            }
         },
         onError: (error) => {
-            console.error("Error liking post:", error);
+            console.error("Error liking/unliking post:", error);
         },
     });
+    const [shareCount, setShareCount] = useState(post.share_count);
+    const { mutate: handleShare, isPending: sharing } = useMutation({
+        mutationKey: ["share"],
+        mutationFn: async () => {
+            const response = await fetch("https://tipster.hmstech.org/api/posts/share", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // If token is required
+                },
+                body: JSON.stringify({
+                    user_id: userData?.id, // Ensure user ID is available
+                    post_id: post.id
+                }),
+            });
 
+            if (!response.ok) {
+                throw new Error("Failed to share post");
+            }
+
+            const data = await response.json();
+            return data;
+        },
+        onSuccess: async () => {
+            // Increase share count locally
+            setShareCount((prev) => prev + 1);
+
+            // Open Android Share Dialog with Post Content
+            try {
+                await Share.share({
+                    message: post.content, // Only share text
+                });
+            } catch (error) {
+                console.error("Error sharing post:", error);
+            }
+        },
+        onError: (error) => {
+            console.error("Error sharing post:", error);
+        },
+    });
+    const { navigate, reset } = useNavigation<NavigationProp<any>>();
+
+    const handleProfile = (id: number) => {
+        navigate("profile", {
+            context: "signup",
+            userId: id,
+        });
+    }
     return (
         <>
             <View style={styles.postContainer}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                        <Image source={{ uri: API_Images_Domain + post.user.profile_picture }} style={styles.profileImage} />
-                        <View>
-                            <Text style={styles.username}>{post.user.username}</Text>
-                            <Text style={styles.time}>{post.timestamp}</Text>
+                    <TouchableOpacity onPress={() => handleProfile(post.user.id)} activeOpacity={0.7}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                            <Image source={{ uri: API_Images_Domain + post.user.profile_picture }} style={styles.profileImage} />
+                            <View>
+                                <Text style={styles.username}>{post.user.username}</Text>
+                                <Text style={styles.time}>{post.timestamp}</Text>
+                            </View>
                         </View>
-                    </View>
+                    </TouchableOpacity>
+
                     <View style={{ flexDirection: "row", gap: 20, alignItems: "center" }}>
-                        {/* {post.underReview && <Text style={{ backgroundColor: "#FFFF00", padding: 5, paddingInline: 10, borderRadius: 50, opacity: 0.9 }}>Under Review</Text>} */}
+                        {/* {post.underReview && <T zext style={{ backgroundColor: "#FFFF00", padding: 5, paddingInline: 10, borderRadius: 50, opacity: 0.9 }}>Under Review</T>} */}
                         <Ionicons name="ellipsis-vertical" size={20} color="white" />
                     </View>
                 </View>
-                
+
                 {/* Content */}
                 <Text style={styles.content}>{post.content}</Text>
 
@@ -170,9 +244,12 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
                 {/* Post Actions */}
                 <View style={styles.actions}>
                     <TouchableOpacity onPress={() => handleLike()} disabled={likeLoading} style={styles.actionItem}>
-                        <AntDesign name="like2" size={20} color="white" />
-                        <Text style={styles.actionText}>{post.likes_count}</Text>
+                        <AntDesign name={isLiked ? "like1" : "like2"} size={20} color="white" />
+                        <Text style={styles.actionText}>{likesCount}</Text>
                     </TouchableOpacity>
+
+
+
                     <View style={styles.actionItem}>
                         <TouchableOpacity style={styles.actionItem} onPress={() => {
                             handlePress()
@@ -181,13 +258,14 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
                             <Text style={styles.actionText}>{post.comments_count}</Text>
                         </TouchableOpacity>
                     </View>
-                    <View style={styles.actionItem}>
+                    <TouchableOpacity onPress={() => handleShare()} disabled={sharing} style={styles.actionItem}>
                         <FontAwesome name="share" size={20} color="white" />
-                        <Text style={styles.actionText}>{"120"}</Text>
-                    </View>
+                        <Text style={styles.actionText}>{shareCount}</Text>
+                    </TouchableOpacity>
+
                     <View style={styles.actionItem}>
                         <FontAwesome name="eye" size={20} color="white" />
-                        <Text style={styles.actionText}>{'120'}</Text>
+                        <Text style={styles.actionText}>{post.view_count}</Text>
                     </View>
                 </View>
 

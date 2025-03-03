@@ -1,4 +1,4 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, FlatList } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, FlatList, ActivityIndicator, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,7 +10,7 @@ import StatCard from '@/componenetsUi/profile/StatCard';
 import WinRateChart from '@/componenetsUi/profile/WinRateChart';
 import TipCard from '@/componenetsUi/freeTip/TipCard';
 import { useRoute } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getProfile } from '@/utils/queries/Profile';
 import { useAuth } from '@/contexts/authContext';
 import { API_Images_Domain } from '@/utils/apiConfig';
@@ -22,17 +22,58 @@ const Profile = () => {
     const route = useRoute();
     const { token } = useAuth();
     const { context, userId } = route.params as { context: string; userId: number; };
+    const queryClient = useQueryClient();
 
-    console.log("user profile id", userId);
+
+    // State to manage follow/unfollow UI
+    // console.log("user profile id", userId);
     const { data: profileData, isLoading, error } = useQuery({
         queryKey: ['profile'],
         queryFn: () => getProfile(userId, token),
     });
-    console.log(profileData?.data);
-    const UserProfile = profileData?.data;
 
+    // console.log(profileData?.data);
+
+    const UserProfile = profileData?.data;
+    const [isFollowing, setIsFollowing] = useState(UserProfile?.isFollowing);
+    useEffect(() => {
+        setIsFollowing(profileData?.data?.isFollowing);
+    }, [profileData])
+    const { mutate: handleFollow, isPending: following } = useMutation({
+        mutationKey: ["follow", UserProfile?.user.id],
+        mutationFn: async () => {
+            const response = await fetch(`https://tipster.hmstech.org/api/follow/${UserProfile?.user.id}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // If token is required
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to follow user");
+            }
+
+            const data = await response.json();
+            return data;
+        },
+        onSuccess: (data) => {
+            console.log("Follow API Response:", data);
+            if (data.data.is_following === true) {
+                setIsFollowing(true);
+                Alert.alert("Success", "User followed successfully");
+
+            } else {
+                setIsFollowing(false);
+                Alert.alert("Success", "User unfollowed successfully");
+            }
+            // setIsFollowing((prev) => !prev); // Toggle follow state
+        },
+        onError: (error) => {
+            console.error("Error following user:", error);
+        },
+    });
     const portion = [
-        { name: "Performance", value: "performance" },
         { name: "Pending", value: "running" },
         { name: "Won", value: "won" },
         { name: "Lost", value: "lost" },
@@ -47,20 +88,37 @@ const Profile = () => {
     const [filteredTips, setFilteredTips] = useState(UserProfile?.tips);
 
     const filterTips = (tips: any[], status: string, range: string) => {
+        if (!Array.isArray(tips)) {
+            console.warn("Invalid tips data, expected an array");
+            return;
+        }
+
         const now = new Date();
-        const filteredTips = tips.filter(tip => {
-            const matchDate = new Date(tip.match_date);
-            const diffDays = Math.ceil((now.getTime() - matchDate.getTime()) / (1000 * 3600 * 24));
-            return tip.result === status && diffDays <= parseInt(range);
+
+        const filteredTips = tips.filter((tip) => {
+            const matchDateStr = tip.match_date; // Get match_date
+            const matchDate = matchDateStr ? new Date(matchDateStr.split("-").reverse().join("-")) : null; // Convert DD-MM-YYYY to Date
+
+            const withinRange = matchDate
+                ? (Math.ceil((now.getTime() - matchDate.getTime()) / (1000 * 3600 * 24)) <= parseInt(range))
+                : true; // If no match_date, include it
+
+            return tip.result === status;
         });
+
+        console.log("Filtered Tips:", filteredTips);
         setFilteredTips(filteredTips);
     };
 
+    // const [isFollowing, setIsFollowing] = useState(UserProfile?.isFollowing);
+
     const handleSelection = (value: string) => {
         setSelectedPortion(value);
-        if (value === "pending" || value === "won" || value === "lost") {
+        console.log("Selected value:", value);
+        if (value == "running" || value == "won" || value === "lost") {
+            console.log("filter tips called with", UserProfile?.tips, value, selectedRange);
             filterTips(UserProfile?.tips, value, selectedRange);
-        }else {
+        } else {
             setFilteredTips(UserProfile?.tips);
         }
     };
@@ -88,7 +146,7 @@ const Profile = () => {
                 <View style={{ paddingHorizontal: 20, gap: 20 }}>
                     <View style={styles.profileInfo}>
                         <View style={styles.usernameCan}>
-                            <Text style={styles.username}>Alucard</Text>
+                            <Text style={styles.username}>{UserProfile?.user.username}</Text>
                             <Image source={require("@/assets/images/diamond.png")} style={styles.perimumBadge} />
                         </View>
                         <View style={styles.statsCan}>
@@ -111,10 +169,23 @@ const Profile = () => {
                         </Text>
                     </View>
 
-                    <Pressable style={styles.FollowBtn}>
-                        <Feather name="user-check" size={28} color={"black"} />
-                        <Text style={styles.followBtnText}>Follow Alucard</Text>
+                    <Pressable
+                        style={[styles.FollowBtn]}
+                        onPress={() => handleFollow()}
+                        disabled={following}
+                    >
+                        {following ? (
+                            <ActivityIndicator size="small" color="black" />
+                        ) : (
+                            <>
+                                <Feather name={isFollowing ? "user-x" : "user-check"} size={28} color={"black"} />
+                                <Text style={styles.followBtnText}>
+                                    {isFollowing ? "Unfollow" : `Follow ${UserProfile?.user.username}`}
+                                </Text>
+                            </>
+                        )}
                     </Pressable>
+
                     <Pressable style={[styles.FollowBtn, { backgroundColor: "white" }]}>
                         <MaterialIcons name="notifications-on" size={28} color={"black"} />
                         <Text style={[styles.followBtnText, { color: "black" }]}>Subscribe to user notification</Text>

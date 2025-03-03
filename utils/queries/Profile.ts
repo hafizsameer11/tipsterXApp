@@ -33,6 +33,7 @@ interface ProfileView {
         average_odds: number;
         total_predictions: number;
         tips: Tip[];
+        isFollowing: boolean;
         graphicalData: GraphicalData[];
     };
     message: string;

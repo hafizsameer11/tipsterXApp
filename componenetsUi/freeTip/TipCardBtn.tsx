@@ -19,19 +19,26 @@ const TipCardBtn: React.FC<TipCardBtnProps> = ({ odds, wallet, code }) => {
 
   return (
     <View style={styles.bottomCan}>
-      <View style={styles.btnCan}>
+      {/* Odds Box (Smallest) */}
+      <View style={[styles.btnCan, styles.smallBox]}>
         <Text style={styles.btnText}>{odds}</Text>
       </View>
-      <View style={[styles.btnCan, styles.walletBtn]}>
-        {wallet.image ? <Image source={{uri : wallet.image}} alt={"logo"} style={styles.walletLogo} />: (
-            <View style={styles.circle}></View>
+
+      {/* Wallet Box (Middle Size) */}
+      <View style={[styles.btnCan, styles.mediumBox]}>
+        {wallet.image ? (
+          <Image source={{ uri: wallet.image }} alt={"logo"} style={styles.walletLogo} />
+        ) : (
+          <View style={styles.circle}></View>
         )}
         <Text style={styles.walletBtnText}>{wallet.name}</Text>
       </View>
-      <View style={[styles.btnCan, styles.walletBtn, { backgroundColor: "#ffff00" }]}>
-        <Text style={[styles.btnText, { color: "black" }]}>{code}</Text>
+
+      {/* Code Box (Largest) */}
+      <View style={[styles.btnCan, styles.largeBox, { backgroundColor: "#ffff00" }]}>
+        <Text style={[styles.cpbtnText, { color: "black" }]}>{code}</Text>
         <Pressable onPress={handleCopy}>
-          <Ionicons name='copy-outline' size={24} />
+          <Ionicons name='copy-outline' size={22} />
         </Pressable>
       </View>
     </View>
@@ -44,40 +51,67 @@ const styles = StyleSheet.create({
   bottomCan: {
     flexDirection: 'row',
     gap: 10,
-    marginBlock: 10
+    marginVertical: 10,
   },
+
+  /* Odds Box */
+  smallBox: {
+    flex: 1, /* Smallest Box */
+  },
+
+  /* Wallet Box */
+  mediumBox: {
+    flex: 1, /* Medium Box */
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  /* Code Box */
+  largeBox: {
+    flex: 1.5, /* Largest Box */
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+  },
+
   btnCan: {
     borderColor: "#ffff00",
     borderWidth: 2,
-    padding: 10,
-    flex: 1,
+    paddingVertical: 10,
     borderRadius: 5,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
+
   btnText: {
-    fontSize: 12,
+    fontSize: 10,
     color: "white",
-    fontWeight: '900'
+    fontWeight: '900',
   },
+  cpbtnText: {
+    fontSize: 14,
+    color: "white",
+    fontWeight: '900',
+  },
+
   walletLogo: {
-    width: 30,
-    height: 30,
-    resizeMode: 'contain'
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
   },
-  walletBtn: {
-    flexDirection: "row",
-    gap: 10,
-  },
+
   walletBtnText: {
     fontSize: 12,
     color: "white",
-    fontWeight: '900'
+    fontWeight: '900',
   },
-  circle:{
-    width: 30,
-    height: 30,
-    borderRadius: 30/2,
-    backgroundColor: "#ffff00"
-  }
+
+  circle: {
+    width: 20,
+    height: 20,
+    borderRadius: 25 / 2,
+    backgroundColor: "#ffff00",
+  },
 });

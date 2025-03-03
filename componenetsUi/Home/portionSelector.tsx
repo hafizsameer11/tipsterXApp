@@ -18,6 +18,7 @@ const PortionSelector: React.FC<PortionSelectorProps> = ({ options, onSelect, de
   const handleSelect = (value: string) => {
     setSelected(value);
     onSelect(value);
+    console.log("Selected portion:", value);
   };
 
   return (

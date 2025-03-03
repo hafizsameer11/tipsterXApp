@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden'
   },
   dateCircle: {
-    width:45,
+    width: 45,
     height: 45,
     borderRadius: 50,
     backgroundColor: '#4B4B4B',
