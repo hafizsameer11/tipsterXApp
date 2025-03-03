@@ -21,27 +21,26 @@ interface TipCardProps {
     name: string;
   };
   code: string;
-  lastWin:string[];
+  lastWin: string[];
 }
 
-const TipCard: React.FC<TipCardProps> = ({ winRate, profile, tipStatus, date,lastWin, time, odds, wallet, code }) => {
-
+const TipCard: React.FC<TipCardProps> = ({ winRate, profile, tipStatus, date, lastWin, time, odds, wallet, code }) => {
   return (
     <FolderView>
-      <View style={{ padding: 20, paddingHorizontal: 10, position: 'relative' }}>
-
+      <View style={styles.container}>
+        {/* Win Rate */}
         <View style={styles.winrate}>
           <Text style={styles.heading}>Win Rate:</Text>
           <Text style={styles.subheading}>{winRate}</Text>
         </View>
 
-        {/* header can */}
+        {/* Header */}
         <View style={styles.cardHeader}>
           <Image source={{ uri: API_Images_Domain + profile.image }} style={styles.cardHeaderImage} />
-          <View>
-            <Text style={[styles.color, styles.headingOne]}>{profile.name}</Text>
+          <View style={{gap: 8}}>
+            <Text style={styles.profileName}>{profile.name}</Text>
             <View style={styles.cardHeaderInfo}>
-              <Text style={[styles.color, styles.heading_2]}>Last 5:</Text>
+              <Text style={styles.heading_2}>Last 5:</Text>
               <View style={styles.whiteball}>
                 {lastWin.map((item, index) => (
                   <TipCardBox text={item} key={index} />
@@ -51,19 +50,11 @@ const TipCard: React.FC<TipCardProps> = ({ winRate, profile, tipStatus, date,las
           </View>
         </View>
 
-        {/* mid bar */}
-        <TipCardBar
-          status={tipStatus}
-          date={date}
-          // time={time}
-        />
+        {/* Mid Bar */}
+        <TipCardBar status={tipStatus} date={date} />
 
-        <TipCardBtn
-          odds={odds}
-          wallet={wallet}
-          code={code}
-        />
-
+        {/* Odds & Wallet Section */}
+        <TipCardBtn odds={odds} wallet={wallet} code={code} />
       </View>
     </FolderView>
   );
@@ -72,58 +63,69 @@ const TipCard: React.FC<TipCardProps> = ({ winRate, profile, tipStatus, date,las
 export default TipCard;
 
 const styles = StyleSheet.create({
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    marginTop: 5
+  container: {
+    padding: 15,
+    paddingHorizontal: 12,
+    position: 'relative',
   },
-  cardHeaderImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderColor: "#fff",
-    borderWidth: 2
-  },
-  color: {
-    color: "#fff",
-  },
-  cardHeaderInfo: {
-    flexDirection: "row",
-    gap: 10
-  },
-  headingOne: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8
-  },
-  heading_2: {
-    fontSize: 16,
-    opacity: 0.50
-  },
-  whiteball: {
-    flexDirection: "row",
-    gap: 5
-  },
+
+  /* Win Rate Section */
   winrate: {
     position: 'absolute',
     top: 5,
-    right: 5,
-    padding: 5,
-    borderRadius: 100,
+    right: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 50,
     backgroundColor: "white",
-    width: 150,
+    flexDirection: "row",
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: "row",
-    gap: 5
+    width: 110, /* Adjusted width */
   },
   heading: {
-    fontSize: 14,
-    opacity: 0.75
+    fontSize: 12, /* Reduced font size */
+    opacity: 0.75,
+    fontWeight: '500',
   },
   subheading: {
-    fontSize: 18,
-    fontWeight: '900'
-  }
+    fontSize: 14, /* Reduced font size */
+    fontWeight: 'bold',
+  },
+
+  /* Card Header Section */
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 5
+  },
+  cardHeaderImage: {
+    width: 50, /* Reduced size */
+    height: 50,
+    borderRadius: 25,
+    borderColor: "#fff",
+    borderWidth: 1.5
+  },
+  profileName: {
+    fontSize: 13, /* Reduced font size */
+    fontWeight: '600',
+    color: "#fff",
+    marginBottom: 4,
+  },
+  cardHeaderInfo: {
+    flexDirection: "row",
+    alignItems: 'center',
+    gap: 10
+  },
+  heading_2: {
+    fontSize: 11, /* Reduced font size */
+    color: 'rgba(255,255,255,0.6)',
+  },
+
+  /* Last 5 Wins */
+  whiteball: {
+    flexDirection: "row",
+    gap: 4
+  },
 });

@@ -8,20 +8,25 @@ import { API_Images_Domain } from '@/utils/apiConfig';
 interface HeaderProps {
   profileImage: string;
   rNumber: number;
-  notHeaderShown?: boolean
+  notHeaderShown?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ profileImage, rNumber, notHeaderShown }) => {
   const router = useRouter();
-  const {userData} = useAuth();
-  console.log("user",userData);
+  const { userData } = useAuth();
+  
   return (
     <View style={styles.header}>
+      {/* Larger Logo */}
       {!notHeaderShown && <Image source={require("@/assets/logo.png")} style={styles.logo} />}
+      
+      {notHeaderShown && (
+        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+          <AntDesign name="left" size={22} color="white" />
+        </Pressable>
+      )}
 
-      {notHeaderShown && <Pressable style={styles.backBtn} onPress={() => router.back()}>
-        <AntDesign name='left' size={30} color={"white"} />
-      </Pressable>}
+      {/* Right Section */}
       <View style={styles.headerRight}>
         <View style={styles.rCan}>
           <Text style={styles.r}>R</Text>
@@ -31,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({ profileImage, rNumber, notHeaderShown }
         <Image source={{ uri: API_Images_Domain + userData?.profile_picture }} style={styles.headerProfile} />
 
         <Link href={"/notification"} style={styles.headerNotifitcation}>
-          <Ionicons name="notifications" size={25} color="white" />
+          <Ionicons name="notifications" size={20} color="white" />
         </Link>
       </View>
     </View>
@@ -43,58 +48,58 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingBlock: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    gap:30,
   },
   logo: {
-    maxWidth: 100,
-    height: 60,
-    objectFit: "contain",
+    maxWidth: 100, // Increased logo size
+    height: 50,
+    resizeMode: "contain",
   },
   headerRight: {
     flexDirection: "row",
-    gap: 10,
-    alignItems: "center"
+    gap: 6,
+    alignItems: "center",
   },
   rCan: {
     backgroundColor: "#3f3f3f",
-    padding: 10,
-    paddingBlock: 10,
-    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
     flexDirection: "row",
-    alignItems: "center"
+    alignItems: "center",
   },
   r: {
-    color: 'black',
+    color: "black",
     backgroundColor: "#FFFF00",
-    paddingInline: 15,
-    paddingBlock: 5,
-    borderRadius: 10,
-    fontWeight: 900,
-    fontSize: 20
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    fontWeight: "bold",
+    fontSize: 12, // Reduced size
   },
   rNumber: {
     color: "white",
-    fontSize: 15,
-    paddingInline: 10,
-    paddingBlock: 5,
-    fontWeight: 900
+    fontSize: 12, // Reduced size
+    paddingHorizontal: 6,
+    fontWeight: "bold",
   },
   headerProfile: {
-    width: 53,
-    height: 53,
-    borderRadius: 10
+    width: 40, // Reduced profile image size
+    height: 40,
+    borderRadius: 8,
   },
   headerNotifitcation: {
-    paddingInline: 15,
-    paddingBlock: 15,
-    borderRadius: 10,
-    backgroundColor: "#3f3f3f"
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: "#3f3f3f",
   },
   backBtn: {
     backgroundColor: "#2B2B2B",
-    width: 60,
-    height: 60,
-    borderRadius: 10,
+    width: 50, // Smaller back button
+    height: 50,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },

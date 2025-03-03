@@ -4,14 +4,14 @@ import { Entypo, EvilIcons } from '@expo/vector-icons'
 
 type StatusType = 'won' | 'lost' | 'running';
 
-type props ={
+type props = {
     status: StatusType,
     date: string,
     time?: string
 }
 
-const TipCardBar = ({status,time,date}:props) => {
-    
+const TipCardBar = ({ status, time, date }: props) => {
+
     const BgcolorPattern = {
         won: '#008000',
         lost: '#FF0000',
@@ -27,8 +27,8 @@ const TipCardBar = ({status,time,date}:props) => {
         <View style={styles.midBarCan}>
             <View style={styles.tipStatusCan}>
                 <Text style={styles.tipStatusHeading}>Tip Status : </Text>
-                <View style={[styles.statusCan,{backgroundColor:BgcolorPattern[status]}]}>
-                    <Text style={[styles.statusText,{color:ColorPattern[status]}]}>{status}</Text>
+                <View style={[styles.statusCan, { backgroundColor: BgcolorPattern[status] }]}>
+                    <Text style={[styles.statusText, { color: ColorPattern[status] }]}>{status}</Text>
                 </View>
             </View>
             <View style={styles.DateContainer}>
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 600,
         color: "#000",
-        textTransform:"capitalize"
+        textTransform: "capitalize"
     },
     DateCan: {
         backgroundColor: 'white',

@@ -69,7 +69,7 @@ const Login = () => {
             <Text style={styles.subtitle}>Login to your account</Text>
 
             <Formik
-                initialValues={{ email: "hmstech08@gmail.com", password: "11221122" }}
+                initialValues={{ email: "hmstech08@gmail.com", password: "11223344" }}
                 validationSchema={validationSchema}
                 onSubmit={(values, { resetForm }) => {
                     console.log("Login Data:", values);

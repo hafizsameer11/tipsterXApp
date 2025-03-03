@@ -1,11 +1,10 @@
-import { Alert, Dimensions, Image, ScrollViewComponent, StyleSheet, Text, View } from 'react-native';
+import { Alert, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '@/componenetsUi/Header';
 import DateCircle from '@/componenetsUi/freeTip/DateCircle';
 import SortFilter from '@/componenetsUi/freeTip/SortFilter';
-import Svg, { Path } from 'react-native-svg';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import TipCard from '@/componenetsUi/freeTip/TipCard';
 import { Link } from 'expo-router';
@@ -13,6 +12,7 @@ import { AntDesign } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/authContext';
 import { useQuery } from '@tanstack/react-query';
 import { GetTips } from '@/utils/queries/Tip';
+import moment from 'moment'; // Import moment.js for date formatting
 
 const ScreenWidth = Dimensions.get("window").width;
 
@@ -35,35 +35,39 @@ type tipJson = {
     win_rate: string;
     last_five: string[];
   };
-}
+};
 
 const FreeTip = () => {
-  const [currentWeek, setCurrentWeek] = useState<{ day: string; date: string }[]>([]);
+  const [currentWeek, setCurrentWeek] = useState<{ day: string; date: string; fullDate: string }[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
   const { token } = useAuth();
+
   useEffect(() => {
     const today = new Date();
     const firstDayOfWeek = today.getDate() - today.getDay() + 1; // Start from Monday
     const week = [];
 
-    for (let i = 0; i < 5; i++) { // Only 5 days (Monday to Friday)
+    for (let i = 0; i < 5; i++) { // Monday to Friday
       const date = new Date(today.setDate(firstDayOfWeek + i));
       const day = date.toLocaleDateString('en-US', { weekday: 'short' });
       const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      week.push({ day, date: formattedDate });
+      const fullDate = moment(date).format("YYYY-MM-DD"); // Store full date for filtering
+      week.push({ day, date: formattedDate, fullDate });
     }
 
     setCurrentWeek(week);
-    setSelectedDate(week[today.getDay() - 1].date); // Adjust index for Monday start
+    setSelectedDate(week[today.getDay() - 1]?.fullDate || week[0]?.fullDate); // Select today's date or default to Monday
   }, []);
-
 
   const { data: tipsData, isLoading, error } = useQuery({
     queryKey: ['tips'],
     queryFn: () => GetTips(token),
   });
-  const tipJosn = tipsData?.data as tipJson[];
-  console.log(" data ", tipJosn)
+
+  const tipJson = tipsData?.data as tipJson[];
+
+  // **Filter tips based on selected date**
+  const filteredTips = tipJson?.filter(tip => moment(tip.created_at).format("YYYY-MM-DD") === selectedDate) || [];
 
   return (
     <ScrollView style={{ flex: 1 }}>
@@ -83,8 +87,8 @@ const FreeTip = () => {
                 key={index}
                 day={item.day}
                 date={item.date}
-                isSelected={item.date === selectedDate}
-                setSelected={setSelectedDate}
+                isSelected={item.fullDate === selectedDate}
+                setSelected={() => setSelectedDate(item.fullDate)}
               />
             ))}
             <View style={[styles.dateCircle, { backgroundColor: 'white' }]}>
@@ -92,28 +96,29 @@ const FreeTip = () => {
             </View>
           </View>
         </LinearGradient>
+
         <View style={styles.gap}>
-          {/* filter can */}
+          {/* Filters */}
           <View style={styles.filterCan}>
             <SortFilter
               title='sort'
               subTitle='odds'
               icon='sort-variant'
               bgColor='white'
-              onPress={() => Alert.alert('sort clicked!!')}
+              onPress={() => Alert.alert('Sort clicked!')}
             />
             <SortFilter
               title='filter'
               subTitle='all'
               icon='filter-variant'
               bgColor='yellow'
-              onPress={() => Alert.alert('Filter clicked!!')}
+              onPress={() => Alert.alert('Filter clicked!')}
             />
           </View>
 
-          {/* tip Can */}
+          {/* Tips List */}
           <FlatList
-            data={tipJosn}
+            data={filteredTips} // Use filtered tips
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
               <TipCard
@@ -139,13 +144,15 @@ const FreeTip = () => {
           />
         </View>
 
-
-        {!isLoading && <Link href={'/createTipForm'} style={styles.createpost}>
-          <View>
-            <Image source={require('@/assets/images/Polygon.png')} style={styles.plusIcon} />
-            <AntDesign name='plus' size={30} color={"black"} style={styles.createTip} />
-          </View>
-        </Link>}
+        {/* Create Tip Button */}
+        {!isLoading && (
+          <Link href={'/createTipForm'} style={styles.createpost}>
+            <View>
+              <Image source={require('@/assets/images/Polygon.png')} style={styles.plusIcon} />
+              <AntDesign name='plus' size={30} color={"black"} style={styles.createTip} />
+            </View>
+          </Link>
+        )}
       </SafeAreaView>
     </ScrollView>
   );
@@ -163,10 +170,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     gap: 5,
+    overflow: 'hidden'
   },
   dateCircle: {
-    width: 60,
-    height: 60,
+    width:45,
+    height: 45,
     borderRadius: 50,
     backgroundColor: '#4B4B4B',
     justifyContent: 'center',
@@ -188,15 +196,11 @@ const styles = StyleSheet.create({
   tipCan: {
     width: ScreenWidth,
   },
-  shape: {
-    width: "100%", // Ensures the SVG takes full width
-    height: "100%", // Stretches to fill the container height
-  },
   createpost: {
-    position: "fixed",
-    zIndex: 10,
-    bottom: 120,
-    left: '72%'
+    position: "absolute", // Use absolute positioning
+    bottom: 30, // Stick at the bottom
+    right: 20, // Stick to the right
+    zIndex: 10, // Ensure it's above other elements
   },
   plusIcon: {
     width: 100,
@@ -207,6 +211,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: "50%",
     left: "50%",
-    transform: "translate(-50%,-50%)",
-  }
+    transform: [{ translateX: -15 }, { translateY: -15 }],
+  },
 });

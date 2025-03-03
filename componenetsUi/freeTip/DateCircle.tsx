@@ -1,20 +1,23 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, Dimensions } from 'react-native';
 import React from 'react';
+
+const screenWidth = Dimensions.get('window').width; // Get screen width
+const circleSize = screenWidth / 7.5; // Dynamic size (adjust to fit all circles)
 
 type Props = {
   date: string;
   day: string;
   isSelected: boolean;
-  setSelected : (selected : string ) => void;
+  setSelected: (selected: string) => void;
 };
 
 const DateCircle = ({ date, day, isSelected, setSelected }: Props) => {
   return (
-    <Pressable onPress={()=>setSelected(date)}>
-        <View style={[styles.dateCircle, isSelected && styles.selectedDateCircle]}>
-          <Text style={[styles.dateHeading, isSelected && styles.selectedText]}>{day}</Text>
-          <Text style={[styles.dateSubheading, isSelected && styles.selectedText]}>{date}</Text>
-        </View>
+    <Pressable onPress={() => setSelected(date)}>
+      <View style={[styles.dateCircle, isSelected && styles.selectedDateCircle, { width: circleSize, height: circleSize }]}>
+        <Text style={[styles.dateHeading, isSelected && styles.selectedText]}>{day}</Text>
+        <Text style={[styles.dateSubheading, isSelected && styles.selectedText]}>{date}</Text>
+      </View>
     </Pressable>
   );
 };
@@ -23,12 +26,11 @@ export default DateCircle;
 
 const styles = StyleSheet.create({
   dateCircle: {
-    width: 60,
-    height: 60,
     borderRadius: 50,
     backgroundColor: '#4B4B4B',
     justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: 2, // Add some spacing
   },
   selectedDateCircle: {
     backgroundColor: '#FFFF00',

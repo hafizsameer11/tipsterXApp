@@ -10,7 +10,7 @@ type MessageBubbleProps = {
 };
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userId, loginId, images }) => {
-    const isUserMessage = userId === loginId;
+    const isUserMessage = userId == 'user';
     const [modalVisible, setModalVisible] = useState(false);
 
     return (
@@ -18,35 +18,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userId, loginId,
             {images && images.length > 0 && (
                 <TouchableOpacity onPress={() => setModalVisible(true)}>
                     <Image source={{ uri: images[0] }} style={styles.image} />
-                    {images.length > 1 && (
-                        <View style={styles.imageCountOverlay}>
-                            <Text style={styles.imageCountText}>+{images.length - 1}</Text>
-                        </View>
-                    )}
                 </TouchableOpacity>
-            ) }
-            {message ? (
-                <Text style={[styles.messageText, !isUserMessage && styles.otherText ]}>{formatMessage(message)}</Text>
-            ) : null }
-            <Text style={styles.timestamp}>12:22 AM</Text>
-
-            {/* Image Slider Modal */}
-            <Modal visible={modalVisible} transparent={true} animationType="slide">
-                <View style={styles.modalContainer}>
-                    <FlatList
-                        data={images}
-                        horizontal
-                        keyExtractor={(item, index) => index.toString()}
-                        renderItem={({ item }) => (
-                            <Image source={{ uri: item }} style={styles.fullImage} />
-                        )}
-                        style={{maxHeight:350}}
-                    />
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-                        <Text style={styles.closeButtonText}>Close</Text>
-                    </TouchableOpacity>
-                </View>
-            </Modal>
+            )}
+            {message ? <Text style={[styles.messageText, !isUserMessage && styles.otherText]}>{message}</Text> : null}
         </View>
     );
 };

@@ -1,21 +1,41 @@
-// Help.tsx
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, Alert, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, Alert, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import MessageBubble from '@/componenetsUi/help/MessageBubble';
 import InputComponent from '@/componenetsUi/help/InputComponent';
 import * as ImagePicker from "expo-image-picker";
-import { Feather } from '@expo/vector-icons';
+import axios from 'axios';
+import { useAuth } from '@/contexts/authContext';
+
+const API_BASE_URL = "https://tipster.hmstech.org/api"; // Backend URL
 
 const Help: React.FC = () => {
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState<{ id: string; userId: string; text: string; images?: string[] }[]>([
-        { id: '1', userId: '123', text: 'Hi, how can I help you today?' },
-        { id: '2', userId: '456', text: 'I can’t create tips, what is happening?' },
-        { id: '3', userId: '123', text: 'Can you provide more details?',images:[] }
-    ]);
+    const [messages, setMessages] = useState([]);
+    const [loading, setLoading] = useState(false);
     const loginId = '456';
+    const chatId = '1'; // Static chat ID for testing
+    const { token, user } = useAuth();
+
+    const fetchMessages = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get(`${API_BASE_URL}/message/${chatId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMessages(response.data); // Ensure correct format
+        } catch (error) {
+            console.error("Error fetching messages:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchMessages();
+    }, []);
 
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -33,16 +53,51 @@ const Help: React.FC = () => {
         }
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        if (!token) {
+            Alert.alert("Error", "Authentication token is missing.");
+            return;
+        }
+
         if (selectedImages.length === 0 && message.trim() === '') {
             Alert.alert("Error", "Type a message or select an image");
             return;
         }
-        setMessages([...messages, { id: Date.now().toString(), userId: loginId, text: message, images: selectedImages }]);
-        setMessage('');
-        setSelectedImages([]);
+
+        try {
+            setLoading(true);
+            const formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('sender_type', 'user');
+            formData.append('content', message);
+
+            selectedImages.forEach((imageUri, index) => {
+                formData.append(`attachment`, {
+                    uri: imageUri,
+                    name: `image_${index}.jpg`,
+                    type: 'image/jpeg',
+                });
+            });
+
+            const response = await axios.post(`${API_BASE_URL}/message/send`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (response.data.data) {
+                setMessages([...messages, response.data.data]);
+            }
+
+            setMessage('');
+            setSelectedImages([]);
+        } catch (error) {
+            console.error("Error sending message:", error);
+        } finally {
+            setLoading(false);
+        }
     };
-    
 
     return (
         <SafeAreaView style={styles.container}>
@@ -51,13 +106,27 @@ const Help: React.FC = () => {
                 <Text style={styles.profilesText}>TipsterX Support</Text>
             </View>
             <View style={styles.divider} />
-            <FlatList
-                data={messages}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <MessageBubble message={item.text} userId={item.userId} loginId={loginId} images={item.images} />}
-                style={styles.chatCan}
-            />
-            <View style={{position:"relative"}}>
+
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#FFD700" />
+                ) : (
+                    <FlatList
+                        data={messages}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                            <MessageBubble 
+                                message={item.content} 
+                                userId={item.sender_type} 
+                                loginId={loginId} 
+                                images={item.attachment ? [item.attachment] : []} 
+                            />
+                        )}
+                        style={styles.chatCan}
+                        keyboardShouldPersistTaps="handled"
+                    />
+                )}
+
                 {selectedImages.length > 0 && (
                     <FlatList
                         data={selectedImages}
@@ -65,13 +134,13 @@ const Help: React.FC = () => {
                         renderItem={({ item }) => (
                             <Image source={{ uri: item }} style={styles.image} />
                         )}
-                        contentContainerStyle={{gap:10}}
                         horizontal
                         style={styles.selectImageCan}
                     />
                 )}
+
                 <InputComponent message={message} setMessage={setMessage} pickImage={pickImage} handleSubmit={handleSubmit} />
-            </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
@@ -79,25 +148,12 @@ const Help: React.FC = () => {
 export default Help;
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: { flex: 1, backgroundColor: '#222' },
     header: { paddingHorizontal: 10, flexDirection: "row", gap: 20, alignItems: "center" },
     profileImage: { width: 60, height: 60, borderRadius: 30 },
     profilesText: { fontSize: 18, fontWeight: "bold", color: "#fff" },
     divider: { height: 1, backgroundColor: "#5B5B5B", marginTop: 20 },
     chatCan: { flex: 1, paddingHorizontal: 10 },
-    imagePreview: { alignSelf: 'center', marginBottom: 10, position: 'relative' },
     image: { width: 80, height: 80, borderRadius: 10 },
-    imageCountOverlay: {
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        padding: 5,
-        borderRadius: 10
-    },
-    imageCountText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    selectImageCan:{
-        position:"absolute",
-        top:-90,
-    }
+    selectImageCan: { position: "absolute", top: -90 }
 });
