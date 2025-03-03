@@ -1,31 +1,34 @@
+import { useAuth } from '@/contexts/authContext';
+import { API_Images_Domain } from '@/utils/apiConfig';
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
 interface LeaderboardRowProps {
   item: {
+    user_id: number;
+    username: string;
+    profile_picture: string;
     rank: number;
-    name: string;
-    image: string;
-    winRate: string;
     points: number;
-    price: string;
-  };
+  }
   isSelected: boolean;
   onSelect: () => void;
 }
 
 const LeaderboardRow: React.FC<LeaderboardRowProps> = ({ item, isSelected, onSelect }) => {
+  console.log("row data : ",item);
+  const {userData} = useAuth()
   return (
     <TouchableOpacity onPress={onSelect}>
       <View style={[styles.row, isSelected && styles.selectedRow]}>
         <Text style={styles.rank}>{item.rank}</Text>
         <View style={styles.profile}>
-          <Image source={{ uri: item.image }} style={styles.profileImage} />
-          <Text style={styles.name}>{item.name}</Text>
+          <Image source={{ uri: API_Images_Domain + (item.profile_picture || userData.profile_picture)  }} style={styles.profileImage} />
+          <Text style={styles.name}>{item.username || userData.username }</Text>
         </View>
-        <Text style={styles.text}>{item.winRate}</Text>
+        {/* <Text style={styles.text}>{item.winRate}</Text> */}
         <Text style={styles.text}>{item.points}</Text>
-        <Text style={styles.text}>{item.price}</Text>
+        {/* <Text style={styles.text}>{item.price}</Text> */}
       </View>
     </TouchableOpacity>
   );
@@ -62,12 +65,13 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   name: {
-    color: '#fff',
+    color: 'white',
     fontSize: 14,
+    textAlign:"center"
   },
   text: {
     flex: 1,
-    color: '#fff',
+    color: 'white',
     textAlign: 'center',
   },
 });

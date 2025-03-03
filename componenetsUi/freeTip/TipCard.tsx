@@ -4,6 +4,7 @@ import FolderView from './FolderView';
 import TipCardBox from './TipCardBox';
 import TipCardBar from './TipCardBar';
 import TipCardBtn from './TipCardBtn';
+import { API_Images_Domain } from '@/utils/apiConfig';
 
 interface TipCardProps {
   winRate: string;
@@ -13,23 +14,17 @@ interface TipCardProps {
   };
   tipStatus: string;
   date: string;
-  time: string;
+  time?: string;
   odds: string;
   wallet: {
     image?: string;
     name: string;
   };
   code: string;
+  lastWin:string[];
 }
 
-const TipCard: React.FC<TipCardProps> = ({ winRate, profile, tipStatus, date, time, odds, wallet, code }) => {
-  const whiteList = [
-    { text: "W" },
-    { text: "W" },
-    { text: "W" },
-    { text: "L", isRed: true },
-    { text: "W" }
-  ];
+const TipCard: React.FC<TipCardProps> = ({ winRate, profile, tipStatus, date,lastWin, time, odds, wallet, code }) => {
 
   return (
     <FolderView>
@@ -42,14 +37,14 @@ const TipCard: React.FC<TipCardProps> = ({ winRate, profile, tipStatus, date, ti
 
         {/* header can */}
         <View style={styles.cardHeader}>
-          <Image source={{ uri: profile.image }} style={styles.cardHeaderImage} />
+          <Image source={{ uri: API_Images_Domain + profile.image }} style={styles.cardHeaderImage} />
           <View>
             <Text style={[styles.color, styles.headingOne]}>{profile.name}</Text>
             <View style={styles.cardHeaderInfo}>
               <Text style={[styles.color, styles.heading_2]}>Last 5:</Text>
               <View style={styles.whiteball}>
-                {whiteList.map((item, index) => (
-                  <TipCardBox text={item.text} isRed={item.isRed} key={index} />
+                {lastWin.map((item, index) => (
+                  <TipCardBox text={item} key={index} />
                 ))}
               </View>
             </View>
@@ -60,7 +55,7 @@ const TipCard: React.FC<TipCardProps> = ({ winRate, profile, tipStatus, date, ti
         <TipCardBar
           status={tipStatus}
           date={date}
-          time={time}
+          // time={time}
         />
 
         <TipCardBtn

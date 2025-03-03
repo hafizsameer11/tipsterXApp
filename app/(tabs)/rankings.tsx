@@ -10,19 +10,17 @@ import PortionSelector from '@/componenetsUi/Home/portionSelector'
 import LeaderBoard from '@/componenetsUi/ranks/LeaderBoard'
 import LeaderboardTable from '@/componenetsUi/ranks/LeaderboardTable'
 import FAQs from '@/componenetsUi/subscription/Faqs'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Fetchfaqs, FetchUserRank, getRank } from '@/utils/queries/Rank'
+import { useAuth } from '@/contexts/authContext'
+import FaqsCan from '@/componenetsUi/ranks/FaqsCan'
 
 const Rankings = () => {
   const route = useRouter();
+  const { token } = useAuth()
   const [selected, setSelected] = useState('this_week');
   const [selectedPortion, setSelectedPortion] = useState("rankings");
-  const dropdownData = [
-    { label: 'This Week', value: 'this_week' },
-    { label: 'Last 7 days', value: 'last_7_days' },
-    { label: 'Last 14 days', value: 'last_14_days' },
-    { label: 'Last 21 days', value: 'last_21_days' },
-    { label: 'Custom', value: 'custom' },
-  ];
-
+  
   const rankList = [
     {
       "amount": "N 1000",
@@ -48,27 +46,49 @@ const Rankings = () => {
       "amount": "N 500",
       "rank": 6
     },
+    {
+      "amount": "N 400",
+      "rank": 7
+    },
+    {
+      "amount": "N 500",
+      "rank": 8
+    },
+    {
+      "amount": "N 600",
+      "rank": 9
+    },
+    {
+      "amount": "N 200",
+      "rank": 10
+    }
   ];
+
+
+  const faqs = [
+    { quesion: 'How are rewards paid ?', answer: 'I Dont Know' },
+    { quesion: 'Can i use any bank', answer: 'You can receive your leaderboard rewards anytime into your nigerian bank account.' }
+  ];
+  const { data: RanksData, isLoading: loadingStatus, error: geterror } = useQuery({
+    queryKey: ['rank'],
+    queryFn: () => getRank(token),
+  });
+
+  const { data: UserRank, isLoading: UserloadingStatus, error: getUsererror } = useQuery({
+    queryKey: ['Userrank'],
+    queryFn: () => FetchUserRank(token),
+  });
+  console.log("RanksData:", RanksData?.data);
+  console.log("UsersDAta:", UserRank?.data);
+  const leaderboardData = RanksData?.data;
+  const UserleaderboardData = UserRank?.data;
+
+
   const handleSelection = (value: string) => {
     setSelectedPortion(value);
   };
-  const leaderboardData = [
-    { name: 'Sasha', image: 'https://randomuser.me/api/portraits/women/1.jpg', score: 1500, percentage: 90, color: '#1C2E1A', height: 150 },
-    { name: 'Adam', image: 'https://randomuser.me/api/portraits/men/1.jpg', score: 2500, percentage: 95, color: '#243B1E', height: 200 },
-    { name: 'Adam', image: 'https://randomuser.me/api/portraits/men/2.jpg', score: 1000, percentage: 85, color: '#0000FF33', height: 130 },
-  ];
-  const leaderboardDataTable = [
-    { rank: 4, name: 'Samson', image: 'https://randomuser.me/api/portraits/men/1.jpg', winRate: '84%', points: 987, price: '?' },
-    { rank: 5, name: 'Samson', image: 'https://randomuser.me/api/portraits/women/1.jpg', winRate: '84%', points: 987, price: '?' },
-    { rank: 6, name: 'Samson', image: 'https://randomuser.me/api/portraits/men/2.jpg', winRate: '84%', points: 987, price: '?' },
-    { rank: 6, name: 'Samson', image: 'https://randomuser.me/api/portraits/men/2.jpg', winRate: '84%', points: 987, price: '?' },
-    { rank: 6, name: 'Samson', image: 'https://randomuser.me/api/portraits/men/2.jpg', winRate: '84%', points: 987, price: '?' },
-    { rank: 6, name: 'Samson', image: 'https://randomuser.me/api/portraits/men/2.jpg', winRate: '84%', points: 987, price: '?' },
-  ];
-  const faqs = [
-    { title: 'How are rewards paid ?', content: 'I Dont Know' },
-    { title: 'Can i use any bank', content: 'You can receive your leaderboard rewards anytime into your nigerian bank account.' }
-  ];
+
+
   return (
     <SafeAreaView>
       <ScrollView>
@@ -84,11 +104,6 @@ const Rankings = () => {
                 <AntDesign name='left' size={28} color={"white"} />
               </Pressable>
               <Text style={styles.heading}>Rankings</Text>
-              <CustomDropdown
-                data={dropdownData}
-                selectedValue={selected}
-                onSelect={(value) => setSelected(value)}
-              />
             </View>
             <Text style={styles.subtitle}>Contest will end and winners will announced on Sunday</Text>
 
@@ -103,8 +118,8 @@ const Rankings = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ gap: 20 }}
-              scrollEnabled={false}
-              removeClippedSubviews={false}
+            // scrollEnabled={false}
+            // removeClippedSubviews={false}
             />
           </View>
         </LinearGradient>
@@ -122,22 +137,22 @@ const Rankings = () => {
             />
           </View>
 
-          {selectedPortion != "faqs" ? (
+          {selectedPortion == "rankings" ? (
             <>
               <View style={styles.leaderBoard}>
-                {leaderboardData.map((item, index) => (
+                {leaderboardData?.slice(0, 3).map((item, index) => (
                   <LeaderBoard key={index} {...item} />
                 ))}
               </View>
               <View>
-                <LeaderboardTable data={leaderboardDataTable} />
+                <LeaderboardTable data={leaderboardData?.slice(3)} />
               </View>
             </>
-          )
-            :
-            <FAQs Faqs={faqs} />
-
-          }
+          ) : selectedPortion == "my_rank" ? (
+            <View>
+              {UserleaderboardData && <LeaderboardTable data={[UserleaderboardData]} />}
+            </View>
+          ) : <FaqsCan />}
 
         </View>
       </ScrollView>
@@ -173,7 +188,9 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 25,
-    fontWeight: 'bold'
+    flex: 1,
+    fontWeight: 'bold',
+    textAlign: "center"
   },
   subtitle: {
     marginVertical: 10

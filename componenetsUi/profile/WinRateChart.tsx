@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 
 interface WinRateChartProps {
-  winRates: { date: string; winRate: number }[];
+  winRates: { month: string; win_rate: number }[];
   overallWinRate: string;
 }
 
@@ -13,7 +13,7 @@ const WinRateChart: React.FC<WinRateChartProps> = ({ winRates, overallWinRate })
   // Ensure all winRates are valid numbers
   const validWinRates = winRates.map(item => ({
     ...item,
-    winRate: isNaN(item.winRate) ? 0 : item.winRate
+    win_rate: isNaN(item.win_rate) ? 0 : item.win_rate
   }));
 
   return (
@@ -27,10 +27,10 @@ const WinRateChart: React.FC<WinRateChartProps> = ({ winRates, overallWinRate })
       {/* Line Chart */}
       <LineChart
         data={{
-          labels: validWinRates.map((item) => item.date),
-          datasets: [{ data: validWinRates.map((item) => item.winRate) }],
+          labels: validWinRates.map((item) => item.month),
+          datasets: [{ data: validWinRates.map((item) => item.win_rate) }],
         }}
-        width={chartWidth} // Adjust width to 100% minus padding
+        width={chartWidth}
         height={200}
         chartConfig={{
           backgroundGradientFrom: "#222",
@@ -46,7 +46,7 @@ const WinRateChart: React.FC<WinRateChartProps> = ({ winRates, overallWinRate })
             stroke: "yellow",
           },
         }}
-        withDots={false}
+        withDots={true}
         style={{ marginVertical: 10, borderRadius: 12, transform: [{ translateX: -15 }] }}
       />
     </View>

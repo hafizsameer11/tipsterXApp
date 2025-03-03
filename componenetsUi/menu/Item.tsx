@@ -10,7 +10,8 @@ type Props = {
     icon: string
     iconBg: string
     navigatingLink: string
-    iconType: string
+    iconType: string,
+    type?: string
 }
 
 const iconComponents = {

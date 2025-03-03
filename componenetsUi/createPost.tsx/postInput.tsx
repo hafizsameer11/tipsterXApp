@@ -1,14 +1,22 @@
+import { useAuth } from "@/contexts/authContext";
+import { API_DOMAIN, API_Images_Domain } from "@/utils/apiConfig";
 import React from "react";
 import { View, Text, TextInput, Image, StyleSheet } from "react-native";
 
-const PostInput = () => {
+type props = {
+  setSelectedContent: (content: string) => void;
+}
+
+const PostInput = ({setSelectedContent} : props) => {
+  const { userData } = useAuth()
+  console.log("user Data",userData);
   return (
     <View style={styles.inputContainer}>
       <View style={styles.inputBox}>
-        <Image source={{ uri: "https://i.pravatar.cc/100" }} style={styles.profileImage} />
-        <Text style={styles.username}>Alucard</Text>
+        <Image source={{ uri: API_Images_Domain + userData.profile_picture }} style={styles.profileImage} />
+        <Text style={styles.username}>{userData.username}</Text>
       </View>
-      <TextInput placeholder="Start typing" placeholderTextColor="gray" style={styles.textInput} multiline />
+      <TextInput placeholder="Start typing" placeholderTextColor="gray" style={styles.textInput} multiline onChangeText={(text) => setSelectedContent(text)} />
     </View>
   );
 };

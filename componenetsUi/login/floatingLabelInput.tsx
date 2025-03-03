@@ -17,6 +17,7 @@ const FloatingLabelInput: React.FC<FloatingLabelInputProps> = ({ label, value, e
     <View style={styles.inputContainer}>
       {/* Floating Label */}
       <Text
+      onPress={() => setIsFocused(true)}
         style={[
           styles.label,
           (isFocused || value) && styles.hoverLabel, // Move label up if focused or has value

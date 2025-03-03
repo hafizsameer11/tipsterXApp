@@ -7,7 +7,7 @@ type StatusType = 'won' | 'lost' | 'running';
 type props ={
     status: StatusType,
     date: string,
-    time: string
+    time?: string
 }
 
 const TipCardBar = ({status,time,date}:props) => {
@@ -36,10 +36,10 @@ const TipCardBar = ({status,time,date}:props) => {
                     <Entypo name='calendar' size={12} color='black' />
                     <Text style={styles.dateHeading}>{date}</Text>
                 </View>
-                <View style={styles.DateCan}>
+                {/* <View style={styles.DateCan}>
                     <EvilIcons name='clock' size={14} color='black' />
                     <Text style={styles.dateHeading}>{time}</Text>
-                </View>
+                </View> */}
             </View>
         </View>
     )

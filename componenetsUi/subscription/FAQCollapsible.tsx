@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 interface FAQItem {
-    title: string;
-    content: string;
+    question: string;
+    answer: string;
 }
 
 type FAQCollapsibleProps = {
@@ -20,7 +20,7 @@ const FAQCollapsible: React.FC<FAQCollapsibleProps> = ({ faq }) => {
                 style={styles.heading}
                 onPress={() => setIsOpen(!isOpen)}
                 activeOpacity={0.8}>
-                <Text style={styles.title}>{faq.title}</Text>
+                <Text style={styles.title}>{faq.question}</Text>
                 <IconSymbol
                     name="chevron.right"
                     size={18}
@@ -29,7 +29,7 @@ const FAQCollapsible: React.FC<FAQCollapsibleProps> = ({ faq }) => {
                     style={{ transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }}
                 />
             </TouchableOpacity>
-            {isOpen && <Text style={styles.content}>{faq.content}</Text>}
+            {isOpen && <Text style={styles.content}>{faq.answer}</Text>}
         </View>
     );
 };

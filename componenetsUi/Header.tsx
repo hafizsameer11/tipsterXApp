@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/authContext';
+import { API_Images_Domain } from '@/utils/apiConfig';
 
 interface HeaderProps {
   profileImage: string;
@@ -10,7 +12,9 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ profileImage, rNumber, notHeaderShown }) => {
-  const router = useRouter()
+  const router = useRouter();
+  const {userData} = useAuth();
+  console.log("user",userData);
   return (
     <View style={styles.header}>
       {!notHeaderShown && <Image source={require("@/assets/logo.png")} style={styles.logo} />}
@@ -24,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ profileImage, rNumber, notHeaderShown }
           <Text style={styles.rNumber}>{rNumber}</Text>
         </View>
 
-        <Image source={{ uri: profileImage }} style={styles.headerProfile} />
+        <Image source={{ uri: API_Images_Domain + userData?.profile_picture }} style={styles.headerProfile} />
 
         <Link href={"/notification"} style={styles.headerNotifitcation}>
           <Ionicons name="notifications" size={25} color="white" />

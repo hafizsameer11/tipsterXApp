@@ -50,7 +50,8 @@ export default function Calendar({ onDateSelect }: CalendarProps) {
     if (isBefore(date, minSelectableDate)) {
       return;
     }
-    const formattedDate = format(date, 'dd-MM-yyyy');
+    // ondate select paste 2 days before selected date
+    const formattedDate = format(addDays(date, -2), 'dd-MM-yyyy');
     setSelectedDate(date);
     onDateSelect(formattedDate);
     setIsVisible(false);
@@ -229,6 +230,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#FFFFFF',
     fontSize: 14,
+    justifyContent:"space-evenly"
   },
   sunday: {
     color: '#FFE600',

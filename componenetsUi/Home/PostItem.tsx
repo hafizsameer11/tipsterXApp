@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import {
     View,
     Text,
@@ -13,31 +13,68 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
 import { Alert } from "react-native";
+import { API_BASE_URL, API_Images_Domain } from "@/utils/apiConfig";
+import { LikePost } from "@/utils/queries/PostQueries";
+import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/authContext";
 
 const { width, height } = Dimensions.get("window");
 
 interface PostItemProps {
     post: {
-        username: string;
-        time: string;
-        profileImage: string;
+        comments_count: number;
         content: string;
-        likes: number;
-        comments: number;
-        shares: number;
-        views: string;
-        isImage?: boolean;
-        images?: string[];
-        underReview?: boolean;
+        id: number;
+        image_1: string;
+        image_2: string;
+        image_3: string;
+        likes_count: number;
+        recent_comments: any[];
+        timestamp: string;
+        images: string[];
+        user: {
+            id: number;
+            username: string;
+            profile_picture: string
+        };
     };
     onCommentPress: (value: any[]) => void;
+}
+interface postType {
+    comments_count: number;
+    content: string;
+    id: number;
+    image_1: string;
+    image_2: string;
+    image_3: string;
+    likes_count: number;
+    recent_comments: any[];
+    timestamp: string;
+    user: {
+        id: number;
+        username: string;
+        profile_picture: string
+    };
 }
 
 const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState(0);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const { token } = useAuth();
+    const [ImagesData, setImagesData] = useState<string[]>([]);
     // State for BottomSheet visibility
+
+    const images = Object.values(post).filter((value): value is string =>
+        typeof value === "string" &&
+        (value.startsWith("posts/") || value.startsWith("posts/"))
+    );
+
+    useEffect(() => {
+        setImagesData(images);
+    }, [post]);
+
+    console.log(ImagesData);
 
     const handlePress = () => {
         // Pass the comments associated with this post.  If you don't have them
@@ -60,6 +97,16 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
         const newIndex = Math.round(event.nativeEvent.contentOffset.x / width);
         setCurrentIndex(newIndex);
     };
+    const { mutate: handleLike, isPending: likeLoading } = useMutation({
+        mutationKey: ["like"],
+        mutationFn: () => LikePost(post.id, token),
+        onSuccess: (data: any) => {
+            console.log("Post liked successfully:", data);
+        },
+        onError: (error) => {
+            console.error("Error liking post:", error);
+        },
+    });
 
     return (
         <>
@@ -67,50 +114,50 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                        <Image source={{ uri: post.profileImage }} style={styles.profileImage} />
+                        <Image source={{ uri: API_Images_Domain + post.user.profile_picture }} style={styles.profileImage} />
                         <View>
-                            <Text style={styles.username}>{post.username}</Text>
-                            <Text style={styles.time}>{post.time}</Text>
+                            <Text style={styles.username}>{post.user.username}</Text>
+                            <Text style={styles.time}>{post.timestamp}</Text>
                         </View>
                     </View>
                     <View style={{ flexDirection: "row", gap: 20, alignItems: "center" }}>
-                        {post.underReview && <Text style={{ backgroundColor: "#FFFF00", padding: 5, paddingInline: 10, borderRadius: 50, opacity: 0.9 }}>Under Review</Text>}
+                        {/* {post.underReview && <Text style={{ backgroundColor: "#FFFF00", padding: 5, paddingInline: 10, borderRadius: 50, opacity: 0.9 }}>Under Review</Text>} */}
                         <Ionicons name="ellipsis-vertical" size={20} color="white" />
                     </View>
                 </View>
-
+                
                 {/* Content */}
                 <Text style={styles.content}>{post.content}</Text>
 
                 {/* Image Grid */}
-                {post.isImage && post.images && post.images.length > 0 && (
+                {ImagesData && ImagesData && ImagesData.length > 0 && (
                     <View style={styles.imageGrid}>
-                        {post.images.length === 1 ? (
+                        {images.length === 1 ? (
                             <TouchableOpacity onPress={() => openImageSlider(0)}>
-                                <Image source={{ uri: post.images[0] }} style={styles.fullWidthImage} />
+                                <Image source={{ uri: API_Images_Domain + ImagesData[0] }} style={styles.fullWidthImage} />
                             </TouchableOpacity>
-                        ) : post.images.length === 3 ? (
+                        ) : ImagesData.length === 3 ? (
                             <View style={styles.threeImagesGrid}>
                                 <TouchableOpacity onPress={() => openImageSlider(0)} style={styles.largeImageWrapper}>
-                                    <Image source={{ uri: post.images[0] }} style={styles.largeImage} />
+                                    <Image source={{ uri: API_Images_Domain + ImagesData[0] }} style={styles.largeImage} />
                                 </TouchableOpacity>
                                 <View style={styles.smallImagesWrapper}>
                                     <TouchableOpacity onPress={() => openImageSlider(1)} style={styles.smallImageWrapper}>
-                                        <Image source={{ uri: post.images[1] }} style={styles.smallImage} />
+                                        <Image source={{ uri: API_Images_Domain + ImagesData[1] }} style={styles.smallImage} />
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={() => openImageSlider(2)} style={styles.smallImageWrapper}>
-                                        <Image source={{ uri: post.images[2] }} style={styles.smallImage} />
+                                        <Image source={{ uri: API_Images_Domain + ImagesData[2] }} style={styles.smallImage} />
                                     </TouchableOpacity>
                                 </View>
                             </View>
                         ) : (
                             <View style={styles.twoColumnGrid}>
-                                {post.images.slice(0, 4).map((image, index) => (
+                                {ImagesData.slice(0, 4).map((image, index) => (
                                     <TouchableOpacity key={index} onPress={() => openImageSlider(index)} style={styles.imageWrapper}>
-                                        <Image source={{ uri: image }} style={styles.gridImage} />
-                                        {post.images.length > 4 && index === 3 && (
+                                        <Image source={{ uri: API_Images_Domain + image }} style={styles.gridImage} />
+                                        {images.length > 4 && index === 3 && (
                                             <View style={styles.overlay}>
-                                                <Text style={styles.overlayText}>+{post.images.length - 4}</Text>
+                                                <Text style={styles.overlayText}>+{images.length - 4}</Text>
                                             </View>
                                         )}
                                     </TouchableOpacity>
@@ -122,25 +169,25 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
 
                 {/* Post Actions */}
                 <View style={styles.actions}>
-                    <View style={styles.actionItem}>
+                    <TouchableOpacity onPress={() => handleLike()} disabled={likeLoading} style={styles.actionItem}>
                         <AntDesign name="like2" size={20} color="white" />
-                        <Text style={styles.actionText}>{post.likes}</Text>
-                    </View>
+                        <Text style={styles.actionText}>{post.likes_count}</Text>
+                    </TouchableOpacity>
                     <View style={styles.actionItem}>
                         <TouchableOpacity style={styles.actionItem} onPress={() => {
                             handlePress()
                         }}>
                             <FontAwesome name="comment-o" size={20} color="white" />
-                            <Text style={styles.actionText}>{post.comments}</Text>
+                            <Text style={styles.actionText}>{post.comments_count}</Text>
                         </TouchableOpacity>
                     </View>
                     <View style={styles.actionItem}>
                         <FontAwesome name="share" size={20} color="white" />
-                        <Text style={styles.actionText}>{post.shares}</Text>
+                        <Text style={styles.actionText}>{"120"}</Text>
                     </View>
                     <View style={styles.actionItem}>
                         <FontAwesome name="eye" size={20} color="white" />
-                        <Text style={styles.actionText}>{post.views}</Text>
+                        <Text style={styles.actionText}>{'120'}</Text>
                     </View>
                 </View>
 
@@ -148,7 +195,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
                 <Modal visible={modalVisible} transparent={true} animationType="fade">
                     <View style={styles.modalBackground}>
                         <FlatList
-                            data={post.images}
+                            data={ImagesData}
                             horizontal
                             pagingEnabled
                             showsHorizontalScrollIndicator={false}
@@ -160,15 +207,15 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentPress }) => {
                             })}
                             keyExtractor={(item, index) => index.toString()}
                             renderItem={({ item }) => (
-                                <Image source={{ uri: item }} style={styles.fullscreenImage} />
+                                <Image source={{ uri: API_Images_Domain + item }} style={styles.fullscreenImage} />
                             )}
                             onScroll={handleScroll}
                             scrollEventThrottle={16}
                         />
 
                         {/* Dynamic Pagination Dots */}
-                        {post.isImage && post.images && post.images.length > 1 && <View style={styles.pagination}>
-                            {post.images?.map((_, index) => (
+                        {images && images.length > 1 && <View style={styles.pagination}>
+                            {images?.map((_, index) => (
                                 <View key={index} style={[styles.dot, currentIndex === index && styles.activeDot]} />
                             ))}
                         </View>}

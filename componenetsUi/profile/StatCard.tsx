@@ -22,10 +22,10 @@ const StatCard: React.FC<StatCardProps> = ({ title, subtitle, value, icons }) =>
               key={index}
               style={[
                 styles.iconBox,
-                { borderColor: icon === "l" ? "red" : icon == "r" ? "yellow" : "green" },
+                { borderColor: icon.toLowerCase() === "l" ? "red" : icon.toLowerCase() == "r" ? "yellow" : "green" },
               ]}
             >
-              <Text style={[styles.iconText, { color: icon === "l" ? "red" : icon == "r" ? "yellow" : "green" }]}>{icon}</Text>
+              <Text style={[styles.iconText, { color: icon.toLowerCase() === "l" ? "red" : icon.toLowerCase() == "r" ? "yellow" : "green" }]}>{icon}</Text>
             </View>
           ))}
         </View>

@@ -9,89 +9,92 @@ import { styles } from '@/styles/HomeStyle';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetFlatList, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
 import Header from '@/componenetsUi/Header';
+import { useAuth } from '@/contexts/authContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAllPosts } from '@/utils/queries/PostQueries';
 
-const posts = [
-  {
-    "id": 1,
-    "username": "Dante",
-    "profileImage": "https://i.pravatar.cc/101",
-    "time": "10:22 AM - 1/1/25",
-    "content": "I think playing these games at these period can be very profitable...",
-    "likes": 200,
-    "comments": 120,
-    "shares": 200,
-    "views": "2.5k",
-    "isImage": true,
-    "images": [
-      "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz",
-      "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcT9lzboWcKDlhRA-YqCZxo_aF5EomSyB2ZPLd60T7cWkdWx7sbZ",
-      "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQRrcwWKNg6NgkaTAR8_NjircWBh7p2yvMoNAQ7oZVEea9aShha"
-    ],
-    "underReview": true
-  },
-  {
-    "id": 2,
-    "username": "Vergil",
-    "profileImage": "https://i.pravatar.cc/102",
-    "time": "8:30 AM - 2/1/25",
-    "content": "This is a random post without images.",
-    "likes": 150,
-    "comments": 80,
-    "shares": 90,
-    "views": "1.2k"
-  },
-  {
-    "id": 3,
-    "username": "Sephiroth",
-    "profileImage": "https://i.pravatar.cc/103",
-    "time": "9:45 AM - 3/1/25",
-    "content": "I think playing these games at these period can be very profitable...",
-    "likes": 180,
-    "comments": 110,
-    "shares": 160,
-    "views": "1.9k",
-    "isImage": true,
-    "images": [
-      "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz",
-      "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcT9lzboWcKDlhRA-YqCZxo_aF5EomSyB2ZPLd60T7cWkdWx7sbZ"
-    ]
-  },
-  {
-    "id": 4,
-    "username": "Cloud",
-    "profileImage": "https://i.pravatar.cc/104",
-    "time": "7:15 AM - 4/1/25",
-    "content": "One image only, so it should be full width.",
-    "likes": 210,
-    "comments": 130,
-    "shares": 250,
-    "views": "3.1k",
-    "isImage": true,
-    "images": [
-      "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz"
-    ]
-  },
-  {
-    "id": 5,
-    "username": "Admin",
-    "profileImage": "https://i.pravatar.cc/104",
-    "time": "7:15 AM - 4/1/25",
-    "content": "One image only, so it should be full width.",
-    "likes": 210,
-    "comments": 130,
-    "shares": 250,
-    "views": "3.1k",
-    "isImage": true,
-    "images": [
-      "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz",
-      "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcT9lzboWcKDlhRA-YqCZxo_aF5EomSyB2ZPLd60T7cWkdWx7sbZ",
-      "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQRrcwWKNg6NgkaTAR8_NjircWBh7p2yvMoNAQ7oZVEea9aShha",
-      "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz",
-      "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcT9lzboWcKDlhRA-YqCZxo_aF5EomSyB2ZPLd60T7cWkdWx7sbZ",
-      "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQRrcwWKNg6NgkaTAR8_NjircWBh7p2yvMoNAQ7oZVEea9aShha",
-    ]
-  }
-]
+// const posts = [
+//   {
+//     "id": 1,
+//     "username": "Dante",
+//     "profileImage": "https://i.pravatar.cc/101",
+//     "time": "10:22 AM - 1/1/25",
+//     "content": "I think playing these games at these period can be very profitable...",
+//     "likes": 200,
+//     "comments": 120,
+//     "shares": 200,
+//     "views": "2.5k",
+//     "isImage": true,
+//     "images": [
+//       "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz",
+//       "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcT9lzboWcKDlhRA-YqCZxo_aF5EomSyB2ZPLd60T7cWkdWx7sbZ",
+//       "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQRrcwWKNg6NgkaTAR8_NjircWBh7p2yvMoNAQ7oZVEea9aShha"
+//     ],
+//     "underReview": true
+//   },
+//   {
+//     "id": 2,
+//     "username": "Vergil",
+//     "profileImage": "https://i.pravatar.cc/102",
+//     "time": "8:30 AM - 2/1/25",
+//     "content": "This is a random post without images.",
+//     "likes": 150,
+//     "comments": 80,
+//     "shares": 90,
+//     "views": "1.2k"
+//   },
+//   {
+//     "id": 3,
+//     "username": "Sephiroth",
+//     "profileImage": "https://i.pravatar.cc/103",
+//     "time": "9:45 AM - 3/1/25",
+//     "content": "I think playing these games at these period can be very profitable...",
+//     "likes": 180,
+//     "comments": 110,
+//     "shares": 160,
+//     "views": "1.9k",
+//     "isImage": true,
+//     "images": [
+//       "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz",
+//       "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcT9lzboWcKDlhRA-YqCZxo_aF5EomSyB2ZPLd60T7cWkdWx7sbZ"
+//     ]
+//   },
+//   {
+//     "id": 4,
+//     "username": "Cloud",
+//     "profileImage": "https://i.pravatar.cc/104",
+//     "time": "7:15 AM - 4/1/25",
+//     "content": "One image only, so it should be full width.",
+//     "likes": 210,
+//     "comments": 130,
+//     "shares": 250,
+//     "views": "3.1k",
+//     "isImage": true,
+//     "images": [
+//       "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz"
+//     ]
+//   },
+//   {
+//     "id": 5,
+//     "username": "Admin",
+//     "profileImage": "https://i.pravatar.cc/104",
+//     "time": "7:15 AM - 4/1/25",
+//     "content": "One image only, so it should be full width.",
+//     "likes": 210,
+//     "comments": 130,
+//     "shares": 250,
+//     "views": "3.1k",
+//     "isImage": true,
+//     "images": [
+//       "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz",
+//       "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcT9lzboWcKDlhRA-YqCZxo_aF5EomSyB2ZPLd60T7cWkdWx7sbZ",
+//       "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQRrcwWKNg6NgkaTAR8_NjircWBh7p2yvMoNAQ7oZVEea9aShha",
+//       "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcTuuKpIqgOelRRKpnwrhZJTOodmTrVrM78jxZLZ85i1br-bC7Qz",
+//       "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcT9lzboWcKDlhRA-YqCZxo_aF5EomSyB2ZPLd60T7cWkdWx7sbZ",
+//       "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQRrcwWKNg6NgkaTAR8_NjircWBh7p2yvMoNAQ7oZVEea9aShha",
+//     ]
+//   }
+// ]
 
 type coments = {
   username: string;
@@ -110,6 +113,7 @@ export default function HomeScreen() {
   const [selectedPortion, setSelectedPortion] = useState("posts");
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const [SelectCommets, setSelectCommets] = useState<coments[]>()
+  const { token } = useAuth();
 
 
   const bottomsheetRef = useRef<BottomSheet>(null);
@@ -120,27 +124,34 @@ export default function HomeScreen() {
   const handleCommentPress = (comments: any[]) => {
     console.log(comments)
     setSelectCommets(comments)
-    setIsBottomSheetVisible(true); // Show BottomSheet
-    bottomsheetRef.current?.snapToIndex(0); // Optionally snap to a point
+    setIsBottomSheetVisible(true);
+    bottomsheetRef.current?.snapToIndex(0);
   };
 
   const handleSelection = (value: string) => {
     setSelectedPortion(value);
   };
+  const { data: posts, isLoading, error } = useQuery({
+    queryKey: ['post'],
+    queryFn: () => fetchAllPosts(token),
+  });
+  console.log(token);
+  console.log("posts : ",posts);
+  
 
   return (
     <>
       <SafeAreaView style={styles.container}>
         <FlatList
-          data={posts}
-          keyExtractor={(item, index) => item.id.toString() + index}
+          data={posts?.data}
+          keyExtractor={(item, index) => index.toString() + index}
           renderItem={({ item }) => <PostItem post={item} onCommentPress={handleCommentPress} />}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <View style={{ marginTop: 25 }}>
               {/* Header */}
               <Header profileImage={"https://randomuser.me/api/portraits/men/1.jpg"} rNumber={10} />
-
+              <Text style={{color:"white"}}>{token || "no token"}</Text>
               {/* Portion Selector */}
               <PortionSelector
                 options={[
@@ -150,8 +161,6 @@ export default function HomeScreen() {
                 onSelect={handleSelection}
                 defaultValue={selectedPortion}
               />
-
-              {/* Spacing */}
               <View style={{ height: 20 }} />
             </View>
           }
@@ -189,4 +198,3 @@ export default function HomeScreen() {
     </>
   );
 }
-

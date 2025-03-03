@@ -3,13 +3,16 @@ import { View, StyleSheet , Text } from 'react-native';
 import FAQCollapsible from './FAQCollapsible';
 
 type FAQ = {
-    title: string,
-    content: string,
+    id: number;
+    question: string;
+    answer: string;
+    createdAt: string;
+    updatedAt: string;
+    type: string;
 }
 
 type Props = {
     Faqs: FAQ[],
-    // seetign heading default value
     heading?: boolean,
 }
 

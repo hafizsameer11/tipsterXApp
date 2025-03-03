@@ -6,9 +6,9 @@ const LeaderboardHeader: React.FC = () => {
     <View style={styles.header}>
       <Text style={styles.headerText}>Rank</Text>
       <Text style={styles.headerText}>Profile</Text>
-      <Text style={styles.headerText}>Win rate</Text>
+      {/* <Text style={styles.headerText}>Win rate</Text> */}
       <Text style={styles.headerText}>Point</Text>
-      <Text style={styles.headerText}>Price</Text>
+      {/* <Text style={styles.headerText}>Price</Text> */}
     </View>
   );
 };

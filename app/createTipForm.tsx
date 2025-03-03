@@ -7,80 +7,32 @@ import { ThemedText } from '@/components/ThemedText'
 import FAQs from '@/componenetsUi/subscription/Faqs'
 import { Link, useRouter } from 'expo-router'
 import TipCard from '@/componenetsUi/freeTip/TipCard'
+import { useQuery } from '@tanstack/react-query'
+import { useAuth } from '@/contexts/authContext'
+import { getTipFaqs, TipHistory } from '@/utils/queries/Tip'
 
 const CreateTipForm = () => {
   const route = useRouter();
-  const faqs = [
-    { title: 'What is tipster ?', content: 'I Dont Know' },
-    { title: 'How do i add games', content: 'You can add games by clicking on the add button on the home screen and and reading the rules and regulations' }
-  ];
+  const { token , user} = useAuth();
+  // const faqs = [
+  //   { title: 'What is tipster ?', content: 'I Dont Know' },
+  //   { title: 'How do i add games', content: 'You can add games by clicking on the add button on the home screen and and reading the rules and regulations' }
+  // ];
 
-  const tipJson = [
-    {
-      "winRate": "60%",
-      "profile": {
-        "image": "https://randomuser.me/api/portraits/men/1.jpg",
-        "name": "Alucard"
-      },
-      "tipStatus": "lost",
-      "date": "Feb 10",
-      "time": "11:24 AM",
-      "odds": "20.01 Odds",
-      "wallet": {
-        "image": "https://example.com/wallet.png",
-        "name": "SportBet"
-      },
-      "code": "QEWRT4F"
-    },
-    {
-      "winRate": "20%",
-      "profile": {
-        "image": "https://randomuser.me/api/portraits/men/2.jpg",
-        "name": "alex"
-      },
-      "tipStatus": "won",
-      "date": "Feb 10",
-      "time": "11:24 AM",
-      "odds": "20.01 Odds",
-      "wallet": {
-        "image": "https://example.com/wallet.png",
-        "name": "SportBet"
-      },
-      "code": "QEWRT4F"
-    },
-    {
-      "winRate": "90%",
-      "profile": {
-        "image": "https://randomuser.me/api/portraits/men/3.jpg",
-        "name": "Alucard"
-      },
-      "tipStatus": "running",
-      "date": "Feb 10",
-      "time": "11:24 AM",
-      "odds": "20.01 Odds",
-      "wallet": {
-        "image": "https://example.com/wallet.png",
-        "name": "SportBet"
-      },
-      "code": "QEWRT4F"
-    },
-    {
-      "winRate": "70%",
-      "profile": {
-        "image": "https://randomuser.me/api/portraits/men/4.jpg",
-        "name": "alexander"
-      },
-      "tipStatus": "lost",
-      "date": "Feb 10",
-      "time": "11:24 AM",
-      "odds": "20.01 Odds",
-      "wallet": {
-        "image": "https://example.com/wallet.png",
-        "name": "SportBet"
-      },
-      "code": "QEWRT4F"
-    },
-  ];
+  const { data: tipsFaqs, isLoading, error } = useQuery({
+    queryKey: ['tipsFaqs'],
+    queryFn: () => getTipFaqs(token),
+  });
+  const faqs = tipsFaqs?.data;
+  console.log("faqs question",faqs);
+
+
+  const { data: history, isLoading:loadingStatus , error : geterror } = useQuery({
+    queryKey: ['tipsHistory'],
+    queryFn: () => TipHistory(token),
+  });
+  // console.log("history",history?.data);
+  const tipJson = history?.data;
   return (
     <SafeAreaView style={{ paddingHorizontal: 15, gap: 20 }}>
       <ScrollView 
@@ -98,7 +50,7 @@ const CreateTipForm = () => {
         </View>
   
         {/* faqs container */}
-        <FAQs Faqs={faqs} heading={true} />
+        {faqs && <FAQs Faqs={faqs} heading={true} />}
   
         {/* create tip button */}
         <Pressable style={styles.createTipBtn} onPress={() => route.push('/createtip')}>
@@ -117,25 +69,30 @@ const CreateTipForm = () => {
   
         {/* history tip flalist */}
         <FlatList
-          data={tipJson}
-          keyExtractor={(item,index) => index.toString() }
-          renderItem={({ item }) => (
-            <TipCard
-              winRate={item.winRate}
-              profile={item.profile}
-              tipStatus={item.tipStatus}
-              date={item.date}
-              time={item.time}
-              odds={item.odds}
-              wallet={item.wallet}
-              code={item.code}
-            />
-          )}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ gap: 20 }}
-          scrollEnabled={false}
-          removeClippedSubviews={false} 
-        />
+            data={tipJson}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <TipCard
+                lastWin={item.user.last_five}
+                winRate={"70%"}
+                profile={{
+                  name: item.user.username,
+                  image: item.user.profile_picture,
+                }}
+                tipStatus={item.result}
+                date={item.match_date}
+                odds={item.ods}
+                wallet={{
+                  name: item.betting_category,
+                }}
+                code={item.codes}
+              />
+            )}
+            contentContainerStyle={{ gap: 20 }}
+            scrollEnabled={false}
+            removeClippedSubviews={false}
+            ListFooterComponent={<View style={{ marginBottom: 90 }}></View>}
+          />
   
       </ScrollView>
     </SafeAreaView>

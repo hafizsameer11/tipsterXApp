@@ -2,17 +2,20 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 type PackageProps = {
-    selectedPackage: string;
-    setSelectedPackage: (pkg: string) => void;
+    selectedPackage: number;
+    setSelectedPackage: (pkg: number) => void;
+    packages: {
+        id: number;
+        title: string;
+        duration: string;
+        amount: string;
+        created_at: string;
+        updated_at: string;
+    }[];
 };
 
-const packages = [
-    { id: 'daily', label: 'day', price: 1000 },
-    { id: 'monthly', label: 'month', price: 20000, discount: 'Save 25%' },
-    { id: 'weekly', label: 'week', price: 6000 },
-];
 
-const PackageSelector: React.FC<PackageProps> = ({ selectedPackage, setSelectedPackage }) => (
+const PackageSelector: React.FC<PackageProps> = ({ selectedPackage, packages, setSelectedPackage }) => (
     <View style={styles.packageContainer}>
         {packages.map((pkg) => (
             <TouchableOpacity
@@ -20,10 +23,10 @@ const PackageSelector: React.FC<PackageProps> = ({ selectedPackage, setSelectedP
                 style={[styles.packageBox, selectedPackage === pkg.id && styles.selectedPackage]}
                 onPress={() => setSelectedPackage(pkg.id)}
             >
-                {pkg.discount && <Text style={styles.discountText}>{pkg.discount}</Text>}
+                {pkg?.discount && <Text style={styles.discountText}>{pkg?.discount}</Text>}
                 <Text style={styles.packageLabel}>1</Text>
-                <Text style={styles.packageLabel}>{pkg.label}</Text>
-                <Text style={styles.packagePrice}>N {pkg.price.toLocaleString()}</Text>
+                <Text style={styles.packageLabel}>{pkg.title}</Text>
+                <Text style={styles.packagePrice}>N {pkg.amount}</Text>
             </TouchableOpacity>
         ))}
     </View>
@@ -36,18 +39,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         marginVertical: 20,
-        gap:20,
-        paddingHorizontal:20
+        gap: 20,
+        paddingHorizontal: 20
     },
     packageBox: {
-        padding: 15,
+        paddingVertical:10 ,
         backgroundColor: '#222',
         borderRadius: 10,
         alignItems: 'center',
-        justifyContent:"center",
-        flex:1,
-        position:"relative",
-        gap:10
+        justifyContent: "center",
+        flex: 1,
+        position: "relative",
+        gap: 10
     },
     selectedPackage: {
         borderColor: '#FFD700',
@@ -61,19 +64,19 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         borderRadius: 5,
         marginBottom: 5,
-        position:'absolute',
-        top:-20
+        position: 'absolute',
+        top: -20
     },
     packageLabel: {
         fontSize: 16,
-        width:50,
         textAlign: 'center',
         fontWeight: 'bold',
         color: '#FFF',
-        textTransform:"capitalize"
+        textTransform: "capitalize",
+        wordWrap: 'keep-all'
     },
     packagePrice: {
         fontSize: 14,
         color: '#FFF'
-    }
+    },
 });

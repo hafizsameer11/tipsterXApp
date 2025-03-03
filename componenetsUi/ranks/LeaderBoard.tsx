@@ -1,23 +1,31 @@
+import { API_Images_Domain } from '@/utils/apiConfig';
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 
 interface LeaderboardItemProps {
-    name: string;
-    image: string;
-    score: number;
-    percentage: number;
-    color: string;
-    height: number;
+    user_id?: number;
+    username?: string;
+    profile_picture?: string;
+    rank?: number;
+    points?: number;
+    // percentage?: number;
+    // color?: string;
+    // height?: number;
 }
 
-const LeaderBoard: React.FC<LeaderboardItemProps> = ({ name, image, score, percentage, color, height }) => {
+const LeaderBoard: React.FC<LeaderboardItemProps> = ({ username, profile_picture, points, rank,percentage, color, height }) => {
+    const styling ={
+        1 : {color: '#CFFF0B33', height: 200},
+        2 : {color: '#00800033', height: 180},
+        3 : {color: '#0000FF33', height: 160},
+    }
     return (
-        <View style={[styles.card, { backgroundColor: color, height }]}>
-            <Image source={{ uri: image }} style={styles.profileImage} />
+        <View style={[styles.card, { backgroundColor: styling[rank].color, height :styling[rank].height }]}>
+            <Image source={{ uri: API_Images_Domain + profile_picture }} style={styles.profileImage} />
             <View style={styles.info}>
-                <Text style={styles.name}>{name}</Text>
-                <Text style={styles.score}>{score.toLocaleString()}</Text>
-                <Text style={styles.percentage}>{percentage} %</Text>
+                <Text style={styles.name}>{username}</Text>
+                <Text style={styles.score}>{points?.toLocaleString()}</Text>
+                {/* <Text style={styles.percentage}>{percentage} %</Text> */}
             </View>
         </View>
     );

@@ -1,61 +1,75 @@
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import React, { useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { LinearGradient } from 'expo-linear-gradient'
-import { AntDesign, Feather, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons'
-import { useRouter } from 'expo-router'
-import PortionSelector from '@/componenetsUi/Home/portionSelector'
-import CustomDropdown from '@/componenetsUi/global/CustomDropdown'
-import { FlatList } from 'react-native'
-import TipCard from '@/componenetsUi/freeTip/TipCard'
-import DropdownSelect from '@/componenetsUi/profile/DropdownSelect'
-import StatCard from '@/componenetsUi/profile/StatCard'
-import WinRateChart from '@/componenetsUi/profile/WinRateChart'
-import { tipJson } from '@/assets/Dummy/tip_data'
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { AntDesign, Feather, MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import PortionSelector from '@/componenetsUi/Home/portionSelector';
+import DropdownSelect from '@/componenetsUi/profile/DropdownSelect';
+import StatCard from '@/componenetsUi/profile/StatCard';
+import WinRateChart from '@/componenetsUi/profile/WinRateChart';
+import TipCard from '@/componenetsUi/freeTip/TipCard';
+import { useRoute } from '@react-navigation/native';
+import { useQuery } from '@tanstack/react-query';
+import { getProfile } from '@/utils/queries/Profile';
+import { useAuth } from '@/contexts/authContext';
+import { API_Images_Domain } from '@/utils/apiConfig';
 
 const Profile = () => {
     const router = useRouter();
     const [selectedPortion, setSelectedPortion] = useState("performance");
-    const [selectedRange, setSelectedRange] = useState<string>("");
-    const handleSelection = (value: string) => {
-        setSelectedPortion(value);
-    };
+    const [selectedRange, setSelectedRange] = useState<string>("30");
+    const route = useRoute();
+    const { token } = useAuth();
+    const { context, userId } = route.params as { context: string; userId: number; };
+
+    console.log("user profile id", userId);
+    const { data: profileData, isLoading, error } = useQuery({
+        queryKey: ['profile'],
+        queryFn: () => getProfile(userId, token),
+    });
+    console.log(profileData?.data);
+    const UserProfile = profileData?.data;
 
     const portion = [
         { name: "Performance", value: "performance" },
-        { name: "Pending", value: "pending" },
+        { name: "Pending", value: "running" },
         { name: "Won", value: "won" },
         { name: "Lost", value: "lost" },
-    ]
-
-    const WinRate = () => {
-        const winRates = tipJson.map((item) => parseFloat(item.winRate.replace('%', '')));
-        const averageWinRate = winRates.reduce((a, b) => a + b, 0) / winRates.length;
-        return `${(averageWinRate).toFixed(2)}%`;
-    }
-    const averageOdd = ()=>{
-        const odds = tipJson.map((item) => parseFloat(item.odds));
-        const averageOdd = odds.reduce((a, b) => a + b, 0) / odds.length;
-        return averageOdd.toFixed(2);
-    }
-    const TotalWin = ()=>{
-        const wins = tipJson.filter((item) => item.tipStatus === "won").length;
-        return wins;
-    }
-    const formattedData = tipJson.map((item) => ({
-        date: item.date.slice(0, 3),
-        winRate: parseFloat(item.winRate),
-    }));
-    const last5Win = ()=>{
-        const last5Wins = tipJson.slice(Math.max(tipJson.length - 5, 0));
-        return last5Wins.map((item)=> item.tipStatus.slice(0,1));
-    }
-    const statsData = [
-        { title: "Total Wins", subtitle: "Last 30 days", value: TotalWin() },
-        { title: "Last 5 Wins", subtitle: "Last 30 days", value: "", icons: last5Win() },
-        { title: "Average Odds", subtitle: "Last 30 days", value: averageOdd() },
-        { title: "Total Predictions", subtitle: "Last 30 days", value: 320 },
     ];
+
+    const statsData = [
+        { title: "Total Wins", subtitle: "Last 30 days", value: UserProfile?.total_wins },
+        { title: "Last 5 Wins", subtitle: "Last 30 days", value: "", icons: UserProfile?.last_five },
+        { title: "Average Odds", subtitle: "Last 30 days", value: UserProfile?.average_odds },
+        { title: "Total Predictions", subtitle: "Last 30 days", value: UserProfile?.total_predictions },
+    ];
+    // ```javascript
+    const [filteredTips, setFilteredTips] = useState(UserProfile?.tips);
+
+    const filterTips = (tips: any[], status: string, range: string) => {
+        const now = new Date();
+        const filteredTips = tips.filter(tip => {
+            const matchDate = new Date(tip.match_date);
+            const diffDays = Math.ceil((now.getTime() - matchDate.getTime()) / (1000 * 3600 * 24));
+            return tip.result === status && diffDays <= parseInt(range);
+        });
+        setFilteredTips(filteredTips);
+    };
+
+    const handleSelection = (value: string) => {
+        setSelectedPortion(value);
+        if (value === "pending" || value === "won" || value === "lost") {
+            filterTips(UserProfile?.tips, value, selectedRange);
+        }else {
+            setFilteredTips(UserProfile?.tips);
+        }
+    };
+    // ```
+
+    // const filteredTips = filterTips(UserProfile?.tips || [], selectedPortion, selectedRange);
+
+
     return (
         <ScrollView style={{ flex: 1 }}>
             <SafeAreaView>
@@ -71,7 +85,7 @@ const Profile = () => {
                         </Pressable>
                         <Text style={styles.headerHead}>Profile</Text>
                     </View>
-                    <Image source={require('@/assets/images/man.png')} style={styles.profileImage} />
+                    <Image source={{ uri: API_Images_Domain + UserProfile?.user.profile_picture }} style={styles.profileImage} />
                 </LinearGradient>
                 <View style={{ paddingHorizontal: 20, gap: 20 }}>
                     <View style={styles.profileInfo}>
@@ -128,7 +142,7 @@ const Profile = () => {
                     />
 
                     <View>
-                        <WinRateChart winRates={formattedData} overallWinRate={WinRate()} />
+                        {!isLoading && <WinRateChart winRates={UserProfile?.graphicalData} overallWinRate={UserProfile?.win_rate} />}
                     </View>
 
                     <View>
@@ -146,26 +160,31 @@ const Profile = () => {
 
                     <Text style={styles.historyHeading}>Bet History</Text>
 
-                    <FlatList
-                        data={tipJson}
+                    {!isLoading && <FlatList
+                        data={filteredTips}
                         keyExtractor={(item, index) => index.toString()}
                         renderItem={({ item }) => (
                             <TipCard
-                                winRate={item.winRate}
-                                profile={item.profile}
-                                tipStatus={item.tipStatus}
-                                date={item.date}
-                                time={item.time}
-                                odds={item.odds}
-                                wallet={item.wallet}
-                                code={item.code}
+                                lastWin={item.user.last_five}
+                                winRate={"70%"}
+                                profile={{
+                                    name: item.user.username,
+                                    image: item.user.profile_picture,
+                                }}
+                                tipStatus={item.result}
+                                date={item.match_date}
+                                odds={item.ods}
+                                wallet={{
+                                    name: item.betting_category,
+                                }}
+                                code={item.codes}
                             />
                         )}
                         scrollEnabled={false}
                         removeClippedSubviews={true}
                         contentContainerStyle={{ gap: 20 }}
                         ListFooterComponent={<View style={{ marginBottom: 100 }} />}
-                    />
+                    />}
                 </View>
             </SafeAreaView>
         </ScrollView>
@@ -272,5 +291,4 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         marginTop: 40,
     },
-
-})
+});

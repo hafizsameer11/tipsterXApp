@@ -4,12 +4,11 @@ import LeaderboardHeader from './LeaderboardHeader';
 import LeaderboardRow from './LeaderboardRow';
 
 interface LeaderboardItem {
+  user_id: number;
+  username: string;
+  profile_picture: string;
   rank: number;
-  name: string;
-  image: string;
-  winRate: string;
   points: number;
-  price: string;
 }
 
 interface LeaderboardTableProps {
@@ -18,7 +17,7 @@ interface LeaderboardTableProps {
 
 const LeaderboardTable: React.FC<LeaderboardTableProps> = ({ data }) => {
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
-
+  console.log("trable data",data);
   return (
     <View style={styles.container}>
       <LeaderboardHeader />

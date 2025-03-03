@@ -10,13 +10,37 @@ import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import TipCard from '@/componenetsUi/freeTip/TipCard';
 import { Link } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/authContext';
+import { useQuery } from '@tanstack/react-query';
+import { GetTips } from '@/utils/queries/Tip';
 
 const ScreenWidth = Dimensions.get("window").width;
+
+type tipJson = {
+  id: number;
+  user_id: number;
+  betting_company_id: number;
+  codes: string;
+  ods: string;
+  status: string;
+  result: string;
+  match_date: string;
+  betting_category: string;
+  created_at: string;
+  updated_at: string;
+  user: {
+    id: number;
+    username: string;
+    profile_picture: string;
+    win_rate: string;
+    last_five: string[];
+  };
+}
 
 const FreeTip = () => {
   const [currentWeek, setCurrentWeek] = useState<{ day: string; date: string }[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
-
+  const { token } = useAuth();
   useEffect(() => {
     const today = new Date();
     const firstDayOfWeek = today.getDate() - today.getDay() + 1; // Start from Monday
@@ -33,76 +57,17 @@ const FreeTip = () => {
     setSelectedDate(week[today.getDay() - 1].date); // Adjust index for Monday start
   }, []);
 
-  const tipJson = [
-    {
-      "winRate": "60%",
-      "profile": {
-        "image": "https://randomuser.me/api/portraits/men/1.jpg",
-        "name": "Alucard"
-      },
-      "tipStatus": "lost",
-      "date": "Feb 10",
-      "time": "11:24 AM",
-      "odds": "20.01 Odds",
-      "wallet": {
-        "image": "https://example.com/wallet.png",
-        "name": "SportBet"
-      },
-      "code": "QEWRT4F"
-    },
-    {
-      "winRate": "20%",
-      "profile": {
-        "image": "https://randomuser.me/api/portraits/men/2.jpg",
-        "name": "alex"
-      },
-      "tipStatus": "won",
-      "date": "Feb 10",
-      "time": "11:24 AM",
-      "odds": "20.01 Odds",
-      "wallet": {
-        "image": "https://example.com/wallet.png",
-        "name": "SportBet"
-      },
-      "code": "QEWRT4F"
-    },
-    {
-      "winRate": "90%",
-      "profile": {
-        "image": "https://randomuser.me/api/portraits/men/3.jpg",
-        "name": "Alucard"
-      },
-      "tipStatus": "running",
-      "date": "Feb 10",
-      "time": "11:24 AM",
-      "odds": "20.01 Odds",
-      "wallet": {
-        "image": "https://example.com/wallet.png",
-        "name": "SportBet"
-      },
-      "code": "QEWRT4F"
-    },
-    {
-      "winRate": "70%",
-      "profile": {
-        "image": "https://randomuser.me/api/portraits/men/4.jpg",
-        "name": "alexander"
-      },
-      "tipStatus": "lost",
-      "date": "Feb 10",
-      "time": "11:24 AM",
-      "odds": "20.01 Odds",
-      "wallet": {
-        "image": "https://example.com/wallet.png",
-        "name": "SportBet"
-      },
-      "code": "QEWRT4F"
-    },
-  ];
+
+  const { data: tipsData, isLoading, error } = useQuery({
+    queryKey: ['tips'],
+    queryFn: () => GetTips(token),
+  });
+  const tipJosn = tipsData?.data as tipJson[];
+  console.log(" data ", tipJosn)
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView style={{flex:1}}>
+    <ScrollView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
         <LinearGradient
           colors={['#003', '#2B2B2B']}
           start={{ x: 1, y: 0 }}
@@ -148,18 +113,23 @@ const FreeTip = () => {
 
           {/* tip Can */}
           <FlatList
-            data={tipJson}
+            data={tipJosn}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
               <TipCard
-                winRate={item.winRate}
-                profile={item.profile}
-                tipStatus={item.tipStatus}
-                date={item.date}
-                time={item.time}
-                odds={item.odds}
-                wallet={item.wallet}
-                code={item.code}
+                lastWin={item.user.last_five}
+                winRate={"70%"}
+                profile={{
+                  name: item.user.username,
+                  image: item.user.profile_picture,
+                }}
+                tipStatus={item.result}
+                date={item.match_date}
+                odds={item.ods}
+                wallet={{
+                  name: item.betting_category,
+                }}
+                code={item.codes}
               />
             )}
             contentContainerStyle={{ gap: 20 }}
@@ -170,14 +140,14 @@ const FreeTip = () => {
         </View>
 
 
-        <Link href={'/createTipForm'} style={styles.createpost}>
+        {!isLoading && <Link href={'/createTipForm'} style={styles.createpost}>
           <View>
             <Image source={require('@/assets/images/Polygon.png')} style={styles.plusIcon} />
             <AntDesign name='plus' size={30} color={"black"} style={styles.createTip} />
           </View>
-        </Link>
-      </ScrollView>
-    </SafeAreaView>
+        </Link>}
+      </SafeAreaView>
+    </ScrollView>
   );
 };
 
@@ -233,10 +203,10 @@ const styles = StyleSheet.create({
     height: 100,
     resizeMode: 'contain',
   },
-  createTip:{
-    position:"absolute",
-    top:"50%",
-    left:"50%",
+  createTip: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
     transform: "translate(-50%,-50%)",
   }
 });

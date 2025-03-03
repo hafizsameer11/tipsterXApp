@@ -12,10 +12,23 @@ import * as Yup from "yup";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "@/styles/Loginstyle";
 import FloatingLabelInput from "@/componenetsUi/login/floatingLabelInput";
-import { Link, useRouter } from "expo-router";
+import { Link, useNavigation, useRouter } from "expo-router";
+import { loginUser } from "@/utils/mutations/authMutations";
+import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/authContext";
+import * as SecureStore from "expo-secure-store";
+import { showTopToast } from "@/utils/helpers";
+import { ApiError } from "@/utils/customApiCall";
+import { NavigationProp } from "@react-navigation/native";
 
 const Login = () => {
+
+    const TOKEN_KEY = "USER_TOKEN";
+    const USER_DATA_KEY = "USER_DATA";
+    const { reset, navigate } = useNavigation<NavigationProp<any>>();
+
     const router = useRouter()
+    const { setToken, setUserData } = useAuth();
     const validationSchema = Yup.object().shape({
         email: Yup.string()
             .email("Enter a valid email")
@@ -24,11 +37,30 @@ const Login = () => {
             .min(6, "Password must be at least 6 characters")
             .required("Password is required"),
     });
-    const handleCompleteSubmit = (value: { email: string, password: string }) => {
-        console.log("Login Data:", value);
-        Alert.alert("logined!!")
-        router.push('/(tabs)')
-    }
+    const { mutate: handleLogin, isPending: loginPending } = useMutation({
+        mutationFn: loginUser,
+        mutationKey: ["login"],
+        onSuccess: async (data) => {
+            console.log(data);
+            const result=data?.data;
+            const { token, user: user } = result;
+            setToken(token);
+            setUserData(user);
+            await SecureStore.setItemAsync(TOKEN_KEY, token);
+            await SecureStore.setItemAsync(USER_DATA_KEY, JSON.stringify(user));
+            reset({
+                index: 0,
+                routes: [{ name: "(tabs)" }],
+            });
+        },
+        onError: (error: ApiError) => {
+            showTopToast({
+                type: "error",
+                text1: "Error",
+                text2: error.message,
+            });
+        },
+    });
 
     return (
         <SafeAreaView style={styles.container}>
@@ -37,12 +69,12 @@ const Login = () => {
             <Text style={styles.subtitle}>Login to your account</Text>
 
             <Formik
-                initialValues={{ email: "", password: "" }}
+                initialValues={{ email: "hmstech08@gmail.com", password: "11221122" }}
                 validationSchema={validationSchema}
                 onSubmit={(values, { resetForm }) => {
                     console.log("Login Data:", values);
-                    handleCompleteSubmit(values)
-                    resetForm();
+                    handleLogin(values)
+                    // resetForm();
                 }}
             >
                 {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
@@ -73,8 +105,9 @@ const Login = () => {
                         </Link>
 
                         {/* Login Button */}
-                        <TouchableOpacity style={styles.loginButton} onPress={() => handleSubmit()}>
-                            <Text style={styles.loginButtonText}>Login</Text>
+                        <TouchableOpacity style={styles.loginButton} disabled={loginPending} onPress={() => handleSubmit()}>
+                            <Text style={styles.loginButtonText}>
+                                {loginPending ? " Loading..." :"Login"}</Text>
                         </TouchableOpacity>
 
                         {/* Register Link */}
